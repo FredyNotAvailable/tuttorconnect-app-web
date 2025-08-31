@@ -1,0 +1,7 @@
+flutter clean
+flutter pub get
+clear
+
+
+flutter run
+

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "938024165240",
+    "project_id": "tutorconnect-54eb3",
+    "storage_bucket": "tutorconnect-54eb3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:938024165240:android:a834a0075807082d2a328d",
+        "android_client_info": {
+          "package_name": "com.uide.tutorconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxgg62PtHfUP3KZKsSu0qEiWb-vpN79dY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
