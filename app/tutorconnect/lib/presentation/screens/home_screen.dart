@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
+import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
 import 'package:tutorconnect/presentation/widgets/clases_widget.dart';
 import 'package:tutorconnect/presentation/widgets/perfil_usuario_widget.dart';
 import 'package:tutorconnect/presentation/widgets/solicitud_tutoria_widget.dart';
@@ -21,10 +22,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
-    // Lista de pantallas que mostrará el bottom nav
-    final List<Widget> _screens = [
+    // Definir pantallas y tabs según rol
+    final List<Widget> screens = [
       const TutoriasWidget(),
-      const SolicitudesTutoriasWidget(),
+      if (user?.rol == UsuarioRol.estudiante) const SolicitudesTutoriasWidget(),
       if (user != null)
         ClasesWidget(usuario: user)
       else
@@ -34,6 +35,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       else
         const Center(child: Text("No hay usuario logueado")),
     ];
+
+    final List<BottomNavigationBarItem> navItems = [
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.menu_book),
+        label: "Tutorías",
+      ),
+      if (user?.rol == UsuarioRol.estudiante)
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.assignment),
+          label: "Solicitudes",
+        ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.class_),
+        label: "Clases",
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.person),
+        label: "Perfil",
+      ),
+    ];
+
+    // Asegurarse de que el índice seleccionado sea válido si el rol cambia
+    if (_selectedIndex >= screens.length) _selectedIndex = 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -46,9 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Cerrar Sesión'),
-                  content: const Text(
-                    '¿Estás seguro de que quieres cerrar sesión?',
-                  ),
+                  content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
@@ -69,36 +91,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-
-      // 👇 Pantalla seleccionada
-      body: _screens[_selectedIndex],
-
-      // 👇 Bottom Navigation Bar actualizado
+      body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book),
-            label: "Tutorías",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: "Solicitudes",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.class_),
-            label: "Clases",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Perfil",
-          ),
-        ],
+        onTap: (index) => setState(() => _selectedIndex = index),
+        items: navItems,
         type: BottomNavigationBarType.fixed,
       ),
     );
