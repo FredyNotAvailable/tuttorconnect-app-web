@@ -86,32 +86,43 @@ class DetalleTutoriaScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             const Text('Estudiantes inscritos:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
-            ...estudiantes.map((estudiante) {
-              final asistencias = getAllAsistenciaByEstudiante(ref, estudiante.id, tutoriaId: currentTutoria.id);
-              final asistencia = asistencias.isNotEmpty
-                  ? asistencias.first
-                  : AsistenciaTutoriaModel(
-                      id: '',
-                      estudianteId: estudiante.id,
-                      tutoriaId: currentTutoria.id,
-                      estado: AsistenciaEstado.ausente,
-                      fecha: Timestamp.now(),
-                    );
-                    
-                    print("Asiustenvcias: ${asistencia.id}");
 
 
-              return ListTile(
-                leading: const Icon(Icons.person),
-                title: Text(estudiante.nombreCompleto),
-                trailing: ElevatedButton(
-                  child: Text(asistencia.estado == AsistenciaEstado.presente ? 'Presente' : 'Ausente'),
-                  onPressed: (isDocente && !tutoriaTerminada) // <-- solo si docente y tutoría no terminó
-                      ? () => _mostrarModalAsistencia(context, ref, estudiante.id, asistencia)
-                      : null,
-                ),
-              );
-            }).toList(),
+...estudiantes.map((estudiante) {
+  final asistencias = getAllAsistenciaByEstudiante(ref, estudiante.id, tutoriaId: currentTutoria.id);
+
+  // Determinar si existe asistencia
+  final asistenciaExiste = asistencias.isNotEmpty;
+  final asistencia = asistenciaExiste
+      ? asistencias.first
+      : AsistenciaTutoriaModel(
+          id: '',
+          estudianteId: estudiante.id,
+          tutoriaId: currentTutoria.id,
+          estado: AsistenciaEstado.ausente, // temporal
+          fecha: Timestamp.now(),
+        );
+
+  print("Asistencia estudiante ${estudiante.nombreCompleto}: ${asistencia.id} (${asistencia.estado})");
+
+  return ListTile(
+    leading: const Icon(Icons.person),
+    title: Text(estudiante.nombreCompleto),
+    trailing: ElevatedButton(
+      child: Text(
+        asistenciaExiste
+            ? (asistencia.estado == AsistenciaEstado.presente ? 'Presente' : 'Ausente')
+            : 'Marcar', // <-- si no existe, mostrar Marcar
+      ),
+      onPressed: (isDocente && !tutoriaTerminada)
+          ? () => _mostrarModalAsistencia(context, ref, estudiante.id, asistencia)
+          : null,
+    ),
+  );
+}).toList(),
+
+
+
           ],
         ),
       ),

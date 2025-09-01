@@ -14,8 +14,7 @@ MatriculaModel getMatriculaById(WidgetRef ref, String id) {
     return MatriculaModel(
       id: '',
       estudianteId: '',
-      carreraId: '',
-      ciclo: 0,
+      mallaId: '',
     );
   }
 
@@ -24,8 +23,7 @@ MatriculaModel getMatriculaById(WidgetRef ref, String id) {
     orElse: () => MatriculaModel(
       id: '',
       estudianteId: '',
-      carreraId: '',
-      ciclo: 0,
+      mallaId: '',
     ),
   );
 
@@ -40,55 +38,48 @@ List<MatriculaModel> getAllMatriculasByEstudiante(WidgetRef ref, String estudian
   return matriculas.where((m) => m.estudianteId == estudianteId).toList();
 }
 
-/// Devuelve todas las matrículas de una carrera dado el ID de la carrera
-List<MatriculaModel> getAllMatriculasByCarrera(WidgetRef ref, String carreraId) {
+/// Devuelve todas las matrículas de una malla dado el ID de la malla
+List<MatriculaModel> getAllMatriculasByMalla(WidgetRef ref, String mallaId) {
   final state = ref.read(matriculaProvider);
   final matriculas = state.matriculas ?? [];
 
-  return matriculas.where((m) => m.carreraId == carreraId).toList();
+  return matriculas.where((m) => m.mallaId == mallaId).toList();
 }
 
 /// Devuelve todas las materias completas en las que un estudiante está matriculado
 List<MateriaModel> getMateriasByEstudianteId(WidgetRef ref, String estudianteId) {
   print("=== getMateriasByEstudianteId ===");
-  print("Estudiante ID: $estudianteId");
 
   // 1️⃣ Obtener todas las matrículas
-  final matriculasState = ref.read(matriculaProvider);
-  final matriculas = matriculasState.matriculas ?? [];
-  print("Todas las matriculas: ${matriculas.map((m) => m.id).toList()}");
-
-  // 2️⃣ Filtrar las matrículas del estudiante
+  final matriculas = ref.read(matriculaProvider).matriculas ?? [];
+  
+  // 2️⃣ Filtrar matrículas del estudiante
   final matriculasEstudiante = matriculas.where((m) => m.estudianteId == estudianteId).toList();
   print("Matriculas del estudiante: ${matriculasEstudiante.map((m) => m.id).toList()}");
 
-  // 3️⃣ Obtener mallas curriculares
-  final mallaState = ref.read(mallaCurricularProvider);
-  final mallas = mallaState.mallas ?? [];
-  print("Todas las mallas curriculares: ${mallas.map((m) => m.id).toList()}");
+  if (matriculasEstudiante.isEmpty) return [];
 
-  // 4️⃣ Filtrar mallas del estudiante según matrícula
-  final mallasEstudiante = mallas.where(
-    (m) => matriculasEstudiante.any((mat) => mat.carreraId == m.carreraId && mat.ciclo == m.ciclo)
-  ).toList();
-  print("Mallas curriculares del estudiante: ${mallasEstudiante.map((m) => m.id).toList()}");
+  // 3️⃣ Obtener mallas curriculares correspondientes
+  final mallas = ref.read(mallaCurricularProvider).mallas ?? [];
+  final mallasEstudiante = mallas
+      .where((m) => matriculasEstudiante.any((mat) => mat.mallaId == m.id))
+      .toList();
+  print("Mallas del estudiante: ${mallasEstudiante.map((m) => m.id).toList()}");
 
-  // 5️⃣ Obtener relaciones materias-malla
-  final materiasMallaState = ref.read(materiaMallaProvider);
-  final materiasMalla = materiasMallaState.materiasMalla ?? [];
-  print("Todas las materiasMalla: ${materiasMalla.map((mm) => mm.materiaId).toList()}");
+  // 4️⃣ Obtener todas las materias-malla
+  final materiasMalla = ref.read(materiaMallaProvider).materiasMalla ?? [];
 
-  // 6️⃣ Filtrar IDs de materias según mallas del estudiante
-  final materiasIds = materiasMalla
+  // 5️⃣ Filtrar materias que pertenecen a las mallas del estudiante
+  final materiaIds = materiasMalla
       .where((mm) => mallasEstudiante.any((m) => m.id == mm.mallaId))
       .map((mm) => mm.materiaId)
       .toSet()
       .toList();
-  print("IDs de materias del estudiante: $materiasIds");
+  print("IDs de materias: $materiaIds");
 
-  // 7️⃣ Obtener las materias completas
-  final materias = materiasIds.map((id) => getMateriaById(ref, id)).toList();
-  print("Materias completas del estudiante: ${materias.map((m) => m.nombre).toList()}");
+  // 6️⃣ Obtener las materias completas
+  final materias = materiaIds.map((id) => getMateriaById(ref, id)).whereType<MateriaModel>().toList();
+  print("Materias completas: ${materias.map((m) => m.nombre).toList()}");
 
   return materias;
 }

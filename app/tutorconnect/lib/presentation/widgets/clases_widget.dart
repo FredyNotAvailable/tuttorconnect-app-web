@@ -34,6 +34,7 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
     Future.microtask(() => ref.read(materiaMallaProvider.notifier).getAllMateriasMalla());
     Future.microtask(() => ref.read(materiaProvider.notifier).getAllMaterias());
     Future.microtask(() => ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias());
+    Future.microtask(() => ref.read(materiaMallaProvider.notifier).getAllMateriasMalla());
   }
 
   @override

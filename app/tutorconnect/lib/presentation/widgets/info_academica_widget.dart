@@ -4,6 +4,7 @@ import 'package:tutorconnect/features/carreras/helpers/carrera_helper.dart';
 import 'package:tutorconnect/features/mallas_curriculares/application/providers/malla_curricular_provider.dart';
 import 'package:tutorconnect/features/mallas_curriculares/helpers/malla_curricular_helper.dart';
 import 'package:tutorconnect/features/materias/helpers/materia_helper.dart';
+import 'package:tutorconnect/features/materias_malla/application/providers/materia_malla_provider.dart';
 import 'package:tutorconnect/features/matriculas/helpers/matricula_helper.dart';
 import 'package:tutorconnect/features/matriculas/application/providers/matricula_provider.dart';
 import 'package:tutorconnect/features/carreras/application/providers/carrera_provider.dart';
@@ -26,6 +27,7 @@ class _InfoAcademicaWidgetState extends ConsumerState<InfoAcademicaWidget> {
       ref.read(matriculaProvider.notifier).getAllMatriculas();
       ref.read(carreraProvider.notifier).getAllCarreras();
       ref.read(mallaCurricularProvider.notifier).getAllMallas();
+      ref.read(materiaMallaProvider.notifier).getAllMateriasMalla();
     });
   }
 
@@ -59,10 +61,11 @@ class _InfoAcademicaWidgetState extends ConsumerState<InfoAcademicaWidget> {
 
         // Recorremos las matrículas
         ...matriculas.map((m) {
-          final carrera = getCarreraById(ref, m.carreraId);
-          final mallas = getMallasByCarreraId(ref, m.carreraId)
-              .where((mall) => mall.ciclo == m.ciclo)
-              .toList();
+          final malla = getMallaCurricularById(ref, m.mallaId);
+          final carrera = getCarreraById(ref, malla.carreraId);
+
+          print("Carrera: ${carrera?.nombre}, Ciclo: ${malla.ciclo}, Año: ${malla.anio}");
+
 
           return Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -88,7 +91,7 @@ class _InfoAcademicaWidgetState extends ConsumerState<InfoAcademicaWidget> {
                               style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 2),
-                            Text('Ciclo: ${m.ciclo}', style: theme.textTheme.bodyMedium),
+                            Text('Ciclo: ${malla.ciclo}', style: theme.textTheme.bodyMedium),
                           ],
                         ),
                       ),
@@ -96,42 +99,25 @@ class _InfoAcademicaWidgetState extends ConsumerState<InfoAcademicaWidget> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Mallas curriculares
-                  if (mallas.isNotEmpty) ...[
-                    Text(
-                      'Malla Curricular:',
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    ...mallas.map((mall) {
-                      final materias = getMateriasByMallaId(ref, mall.id);
+                  // Malla curricular y año
+                  Text(
+                    'Malla Curricular: ${malla.anio}',
+                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
 
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 12, bottom: 6),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '- Año: ${mall.anio}',
-                              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 2),
-                            // Listado de materias
-                            ...materias.map((matMalla) {
-                              final materia = getMateriaById(ref, matMalla.materiaId);
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 12, bottom: 2),
-                                child: Text(
-                                  '• ${materia.nombre}',
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
+                  // Listado de materias
+                  const SizedBox(height: 4),
+                  ...getMateriasByMallaId(ref, malla.id).map((matMalla) {
+                    final materia = getMateriaById(ref, matMalla.materiaId);
+                    print("Materia: ${materia?.nombre}");
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 12, bottom: 2),
+                      child: Text(
+                        '• ${materia.nombre}',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -141,3 +127,4 @@ class _InfoAcademicaWidgetState extends ConsumerState<InfoAcademicaWidget> {
     );
   }
 }
+

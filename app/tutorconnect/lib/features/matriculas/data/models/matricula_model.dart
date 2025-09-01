@@ -1,16 +1,14 @@
 // lib/features/matriculas/data/models/matricula_model.dart
 
 class MatriculaModel {
-  final String id;          // ID del documento en Firestore/Supabase
+  final String id;           // ID del documento en Firestore/Supabase
   final String estudianteId; // FK → usuarios.id
-  final String carreraId;    // FK → carreras.id
-  final int ciclo;           // Ciclo académico
+  final String mallaId;      // FK → mallas.id
 
   MatriculaModel({
     required this.id,
     required this.estudianteId,
-    required this.carreraId,
-    required this.ciclo,
+    required this.mallaId,
   });
 
   /// Convierte de JSON (o Map) a modelo
@@ -18,8 +16,7 @@ class MatriculaModel {
     return MatriculaModel(
       id: id,
       estudianteId: json['estudianteId'] ?? '',
-      carreraId: json['carreraId'] ?? '',
-      ciclo: json['ciclo'] != null ? int.tryParse(json['ciclo'].toString()) ?? 0 : 0,
+      mallaId: json['mallaId'] ?? '',
     );
   }
 
@@ -27,8 +24,7 @@ class MatriculaModel {
   Map<String, dynamic> toJson() {
     return {
       'estudianteId': estudianteId,
-      'carreraId': carreraId,
-      'ciclo': ciclo,
+      'mallaId': mallaId,
     };
   }
 
@@ -36,14 +32,12 @@ class MatriculaModel {
   MatriculaModel copyWith({
     String? id,
     String? estudianteId,
-    String? carreraId,
-    int? ciclo,
+    String? mallaId,
   }) {
     return MatriculaModel(
       id: id ?? this.id,
       estudianteId: estudianteId ?? this.estudianteId,
-      carreraId: carreraId ?? this.carreraId,
-      ciclo: ciclo ?? this.ciclo,
+      mallaId: mallaId ?? this.mallaId,
     );
   }
 }
