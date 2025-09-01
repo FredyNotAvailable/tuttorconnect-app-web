@@ -9,9 +9,9 @@ import {
   Th,
   Td,
   Button,
-  Input,
-  useToast
+  useToast,
 } from "@chakra-ui/react";
+import ReactSelect from "react-select";
 import CrearCarreraModal from "./CrearCarreraModal";
 import EditCarreraModal from "./EditCarreraModal";
 import ConfirmModal from "../../common/components/ConfirmModal";
@@ -24,7 +24,7 @@ function Carreras() {
   const [crearModalOpen, setCrearModalOpen] = useState(false);
   const [editingCarrera, setEditingCarrera] = useState(null);
   const [selectedCarrera, setSelectedCarrera] = useState(null);
-  const [action, setAction] = useState(""); // "delete"
+  const [action, setAction] = useState(""); 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toast = useToast();
@@ -51,33 +51,37 @@ function Carreras() {
     }
   };
 
-  const carrerasFiltradas = carreras.filter(c =>
-    c.nombre.toLowerCase().includes(filtroNombre.toLowerCase())
-  );
+  // Filtrado con ReactSelect
+  const carrerasFiltradas = filtroNombre
+    ? carreras.filter(c => c.nombre === filtroNombre)
+    : carreras;
+
+  const nombreOptions = carreras.map(c => ({ value: c.nombre, label: c.nombre }));
 
   return (
     <Box>
       <Heading mb={4} color="brand.500">Carreras</Heading>
 
-      <Box display="flex" mb={4} gap={2}>
+      <Box display="flex" mb={4} gap={2} flexWrap="wrap">
         <Button
           bg="brand.500"
           color="white"
           _hover={{ bg: "brand.600" }}
           onClick={() => setCrearModalOpen(true)}
+          minW="160px"
         >
           Agregar Carrera
         </Button>
 
-        <Input
-          placeholder="Buscar por nombre..."
-          value={filtroNombre}
-          onChange={(e) => setFiltroNombre(e.target.value)}
-          bg="white"
-          borderColor="transparent"
-          _hover={{ borderColor: "gray.200" }}
-          focusBorderColor="brand.500"
-        />
+        <Box flex="1" minW="200px">
+          <ReactSelect
+            placeholder="Buscar por nombre..."
+            options={nombreOptions}
+            value={filtroNombre ? { value: filtroNombre, label: filtroNombre } : null}
+            onChange={(option) => setFiltroNombre(option ? option.value : "")}
+            isClearable
+          />
+        </Box>
       </Box>
 
       <Table variant="simple">

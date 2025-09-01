@@ -68,7 +68,7 @@ function HorariosClases() {
     ]);
 
     const pMap = {};
-    allProfesores.filter(u => u.rol === Roles.Docente).forEach(p => {
+    allProfesores.filter(u => u.rol === Roles.DOCENTE).forEach(p => {
       pMap[p.id] = p.nombreCompleto;
     });
     setProfesoresMap(pMap);

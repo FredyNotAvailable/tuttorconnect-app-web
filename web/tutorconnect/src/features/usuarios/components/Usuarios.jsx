@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { 
-  Box, Heading, Table, Thead, Tbody, Tr, Th, Td, Button, Input, useToast, HStack 
+  Box, Heading, Table, Thead, Tbody, Tr, Th, Td, Button, useToast, HStack 
 } from "@chakra-ui/react";
 import ReactSelect from "react-select";
 import EditUsuarioModal from "./EditUsuarioModal";
@@ -26,6 +26,7 @@ function Usuarios() {
 
   const toast = useToast();
 
+  // Cargar usuarios
   const cargarUsuarios = async () => {
     const data = await UsuarioRepository.getAllUsuarios();
     setUsuarios(data);
@@ -39,9 +40,9 @@ function Usuarios() {
   // Filtrar usuarios
   useEffect(() => {
     const filtrados = usuarios.filter((u) =>
-      u.nombreCompleto.toLowerCase().includes(filtroNombre.toLowerCase()) &&
-      u.correo.toLowerCase().includes(filtroCorreo.toLowerCase()) &&
-      u.rol.toLowerCase().includes(filtroRol.toLowerCase())
+      (!filtroNombre || u.nombreCompleto === filtroNombre) &&
+      (!filtroCorreo || u.correo === filtroCorreo) &&
+      (!filtroRol || u.rol === filtroRol)
     );
     setUsuariosFiltrados(filtrados);
   }, [filtroNombre, filtroCorreo, filtroRol, usuarios]);
@@ -61,13 +62,16 @@ function Usuarios() {
     }
   };
 
-  // opciones para ReactSelect
+  // Opciones para ReactSelect
+  const nombreOptions = usuarios.map(u => ({ value: u.nombreCompleto, label: u.nombreCompleto }));
+  const correoOptions = usuarios.map(u => ({ value: u.correo, label: u.correo }));
   const rolOptions = Object.values(Roles).map(r => ({ label: r, value: r }));
 
   return (
     <Box>
       <Heading mb={4} color="brand.500">Usuarios</Heading>
 
+      {/* Filtros y botón agregar */}
       <HStack mb={4} spacing={4} flexWrap="wrap">
         <Button 
           bg="brand.500" 
@@ -80,28 +84,29 @@ function Usuarios() {
           Agregar Usuario
         </Button>
 
-        <Input
-          placeholder="Buscar por nombre..."
-          value={filtroNombre}
-          onChange={(e) => setFiltroNombre(e.target.value)}
-          bg="white"
-          flex="1"            
-          minW="200px"        
-          _hover={{ borderColor: "gray.200" }}
-          _focus={{ borderColor: "brand.500", boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)" }}
-        />
+        {/* ReactSelect para nombre */}
+        <Box flex="1" minW="200px">
+          <ReactSelect
+            placeholder="Filtrar por nombre..."
+            options={nombreOptions}
+            value={filtroNombre ? { value: filtroNombre, label: filtroNombre } : null}
+            onChange={(option) => setFiltroNombre(option ? option.value : "")}
+            isClearable
+          />
+        </Box>
 
-        <Input
-          placeholder="Buscar por correo..."
-          value={filtroCorreo}
-          onChange={(e) => setFiltroCorreo(e.target.value)}
-          bg="white"
-          flex="1"
-          minW="200px"
-          _hover={{ borderColor: "gray.200" }}
-          _focus={{ borderColor: "brand.500", boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)" }}
-        />
+        {/* ReactSelect para correo */}
+        <Box flex="1" minW="200px">
+          <ReactSelect
+            placeholder="Filtrar por correo..."
+            options={correoOptions}
+            value={filtroCorreo ? { value: filtroCorreo, label: filtroCorreo } : null}
+            onChange={(option) => setFiltroCorreo(option ? option.value : "")}
+            isClearable
+          />
+        </Box>
 
+        {/* ReactSelect para rol */}
         <Box flex="1" minW="200px">
           <ReactSelect
             placeholder="Filtrar por rol..."
@@ -113,6 +118,7 @@ function Usuarios() {
         </Box>
       </HStack>
 
+      {/* Tabla de usuarios */}
       <Table variant="simple">
         <Thead>
           <Tr>
@@ -144,6 +150,7 @@ function Usuarios() {
         </Tbody>
       </Table>
 
+      {/* Modales */}
       {editingUsuario && (
         <EditUsuarioModal
           usuario={editingUsuario}

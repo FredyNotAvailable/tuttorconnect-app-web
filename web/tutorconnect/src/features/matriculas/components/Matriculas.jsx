@@ -11,6 +11,7 @@ import {
   Button,
   Input,
   useToast,
+  Select
 } from "@chakra-ui/react";
 import ReactSelect from "react-select";
 import CrearMatriculaModal from "./CrearMatriculaModal";
@@ -112,7 +113,7 @@ function Matriculas() {
       return (
         nombreEstudiante.toLowerCase().includes(limpiarTexto(filtroEstudiante).toLowerCase()) &&
         nombreMalla.toLowerCase().includes(limpiarTexto(filtroMalla).toLowerCase()) &&
-        (filtroCiclo === "" || cicloMalla.toString() === filtroCiclo)
+        (filtroCiclo === "" || Number(cicloMalla) === Number(filtroCiclo))
       );
     })
     .sort((a, b) => {
@@ -154,7 +155,7 @@ function Matriculas() {
         />
 
         <Input
-          placeholder="Filtrar por malla..."
+          placeholder="Filtrar por carrera de malla..."
           value={filtroMalla}
           onChange={(e) => setFiltroMalla(e.target.value)}
           flex="1"
@@ -164,16 +165,18 @@ function Matriculas() {
           _hover={{ borderColor: "gray.200" }}
           focusBorderColor="brand.500"
         />
-
         <Box flex="1" minW="150px">
           <ReactSelect
             placeholder="Filtrar por ciclo..."
-            value={filtroCiclo ? { label: filtroCiclo, value: filtroCiclo } : null}
+            value={
+              filtroCiclo !== "" ? { label: `Ciclo ${filtroCiclo}`, value: Number(filtroCiclo) }: null
+            }
             onChange={(option) => setFiltroCiclo(option ? option.value : "")}
-            options={ciclos.map((c) => ({ label: c, value: c }))}
+            options={[...Array(10)].map((_, i) => ({ label: `Ciclo ${i + 1}`, value: i + 1 }))}
             isClearable
           />
         </Box>
+
       </Box>
 
       <Table variant="simple">

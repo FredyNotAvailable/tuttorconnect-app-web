@@ -11,8 +11,8 @@ export const ProfesorMateriaRepository = {
     return await ProfesorMateriaDatasource.getProfesorMateriaById(id);
   },
 
-  createProfesorMateria: async ({ profesorId, materiaId }) => {
-    const nuevoProfesorMateria = new ProfesorMateria({ profesorId, materiaId });
+  createProfesorMateria: async ({ profesorId, materiaId, mallaId }) => {
+    const nuevoProfesorMateria = new ProfesorMateria({ profesorId, materiaId, mallaId });
     return await ProfesorMateriaDatasource.createProfesorMateria(nuevoProfesorMateria);
   },
 

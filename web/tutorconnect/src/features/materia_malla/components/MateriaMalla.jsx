@@ -116,7 +116,7 @@ function MateriasMalla() {
   return (
     <Box h="100%" overflow="hidden">
       <Heading mb={4} color="brand.500">
-        Materias Malla
+        Agregar materias a la malla
       </Heading>
 
       <Box display="flex" mb={4} gap={2} flexWrap="wrap">

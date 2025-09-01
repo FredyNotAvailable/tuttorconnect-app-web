@@ -23,6 +23,7 @@ export const ProfesorMateriaDatasource = {
     await setDoc(docRef, {
       profesorId: profesorMateria.profesorId,
       materiaId: profesorMateria.materiaId,
+      mallaId: profesorMateria.mallaId
     });
     profesorMateria.id = docRef.id;
     return profesorMateria;
@@ -33,6 +34,8 @@ export const ProfesorMateriaDatasource = {
     await setDoc(docRef, {
       profesorId: profesorMateria.profesorId,
       materiaId: profesorMateria.materiaId,
+      mallaId: profesorMateria.mallaId
+
     }, { merge: true });
     return profesorMateria;
   },

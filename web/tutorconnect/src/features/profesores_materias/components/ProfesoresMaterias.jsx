@@ -12,6 +12,7 @@ import {
   Input,
   useToast,
 } from "@chakra-ui/react";
+import ReactSelect from "react-select";
 import CrearProfesorMateriaModal from "./CrearProfesorMateriaModal";
 import EditProfesorMateriaModal from "./EditProfesorMateriaModal";
 import ConfirmModal from "../../common/components/ConfirmModal";
@@ -21,119 +22,110 @@ import { UsuarioRepository } from "../../usuarios/repositories/UsuarioRepository
 import { MateriaRepository } from "../../materias/repositories/MateriaRepository";
 import { Roles } from "../../usuarios/models/UsuarioRoles";
 
+const limpiarTexto = (texto) =>
+  texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9 ]/g, "");
+
 function ProfesoresMaterias() {
   const [profesoresMaterias, setProfesoresMaterias] = useState([]);
   const [crearModalOpen, setCrearModalOpen] = useState(false);
   const [editingProfesorMateria, setEditingProfesorMateria] = useState(null);
   const [selectedProfesorMateria, setSelectedProfesorMateria] = useState(null);
-  const [action, setAction] = useState(""); // "delete"
+  const [action, setAction] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [profesoresMap, setProfesoresMap] = useState({});
   const [materiasMap, setMateriasMap] = useState({});
 
-  // filtros
   const [filtroProfesor, setFiltroProfesor] = useState("");
   const [filtroMateria, setFiltroMateria] = useState("");
 
   const toast = useToast();
 
-  /** Cargar asignaciones */
   const cargarProfesoresMaterias = async () => {
     const data = await ProfesorMateriaRepository.getAllProfesoresMaterias();
     setProfesoresMaterias(data);
   };
 
-  /** Cargar docentes */
-  const cargarProfesores = async () => {
-    const allUsuarios = await UsuarioRepository.getAllUsuarios();
-    const map = {};
-    allUsuarios
-      .filter((u) => u.rol === Roles.Docente || u.rol === "Docente")
-      .forEach((p) => {
-        map[p.id] = p.nombreCompleto;
-      });
-    setProfesoresMap(map);
-  };
+  const cargarMapas = async () => {
+    const [allUsuarios, allMaterias] = await Promise.all([
+      UsuarioRepository.getAllUsuarios(),
+      MateriaRepository.getAllMaterias(),
+    ]);
 
-  /** Cargar materias */
-  const cargarMaterias = async () => {
-    const allMaterias = await MateriaRepository.getAllMaterias();
-    const map = {};
-    allMaterias.forEach((m) => {
-      map[m.id] = m.nombre;
-    });
-    setMateriasMap(map);
+    const pMap = {};
+    allUsuarios
+      .filter((u) => u.rol === Roles.DOCENTE || u.rol === "Docente")
+      .forEach((p) => (pMap[p.id] = p.nombreCompleto));
+    setProfesoresMap(pMap);
+
+    const mMap = {};
+    allMaterias.forEach((m) => (mMap[m.id] = m.nombre));
+    setMateriasMap(mMap);
   };
 
   useEffect(() => {
     cargarProfesoresMaterias();
-    cargarProfesores();
-    cargarMaterias();
+    cargarMapas();
   }, []);
 
-  /** Modal de confirmación */
   const openConfirmModal = (pm, actionType) => {
     setSelectedProfesorMateria(pm);
     setAction(actionType);
     setIsModalOpen(true);
   };
 
-  /** Confirmar acción */
   const handleConfirm = async () => {
     if (action === "delete") {
-      await ProfesorMateriaActions.eliminarProfesorMateria(
-        selectedProfesorMateria.id,
-        toast
-      );
+      await ProfesorMateriaActions.eliminarProfesorMateria(selectedProfesorMateria.id, toast);
       cargarProfesoresMaterias();
     }
   };
 
-  /** Filtrar asignaciones */
   const profesoresMateriasFiltradas = profesoresMaterias
     .filter((pm) => {
-      const nombreProfesor = profesoresMap[pm.profesorId] || "";
-      const nombreMateria = materiasMap[pm.materiaId] || "";
+      const nombreProfesor = limpiarTexto(profesoresMap[pm.profesorId] || "");
+      const nombreMateria = limpiarTexto(materiasMap[pm.materiaId] || "");
 
       return (
-        nombreProfesor.toLowerCase().includes(filtroProfesor.toLowerCase()) &&
-        nombreMateria.toLowerCase().includes(filtroMateria.toLowerCase())
+        nombreProfesor.toLowerCase().includes(limpiarTexto(filtroProfesor).toLowerCase()) &&
+        nombreMateria.toLowerCase().includes(limpiarTexto(filtroMateria).toLowerCase())
       );
     })
     .sort((a, b) => {
-      const nombreA = (profesoresMap[a.profesorId] || "").toLowerCase();
-      const nombreB = (profesoresMap[b.profesorId] || "").toLowerCase();
-      if (nombreA < nombreB) return -1;
-      if (nombreA > nombreB) return 1;
-      return 0;
+      const nombreProfesorA = limpiarTexto(profesoresMap[a.profesorId] || "").toLowerCase();
+      const nombreProfesorB = limpiarTexto(profesoresMap[b.profesorId] || "").toLowerCase();
+      if (nombreProfesorA !== nombreProfesorB) {
+        return nombreProfesorA.localeCompare(nombreProfesorB);
+      }
+      const nombreMateriaA = limpiarTexto(materiasMap[a.materiaId] || "").toLowerCase();
+      const nombreMateriaB = limpiarTexto(materiasMap[b.materiaId] || "").toLowerCase();
+      return nombreMateriaA.localeCompare(nombreMateriaB);
     });
 
   return (
     <Box h="100%" overflow="hidden">
-      <Heading mb={4} color="brand.500">
-        Asignación de materias a Docentes
-      </Heading>
+      <Heading mb={4} color="brand.500">Asignación de Profesores a Materias</Heading>
 
-      {/* Barra de acciones y filtros */}
-      <Box display="flex" mb={4} gap={2} flexWrap="wrap">
+      <Box display="flex" mb={4} gap={2} flexWrap="wrap" alignItems="center">
         <Button
           bg="brand.500"
           color="white"
           _hover={{ bg: "brand.600" }}
           onClick={() => setCrearModalOpen(true)}
           minW="160px"
-          flexShrink={0}
         >
-          Asignar Docente
+          Asignar Profesor a Materia
         </Button>
 
         <Input
-          flex="1"
-          minW="180px"
-          placeholder="Filtrar por docente..."
+          placeholder="Filtrar por profesor..."
           value={filtroProfesor}
           onChange={(e) => setFiltroProfesor(e.target.value)}
+          flex="1"
+          minW="200px"
           bg="white"
           borderColor="transparent"
           _hover={{ borderColor: "gray.200" }}
@@ -141,11 +133,11 @@ function ProfesoresMaterias() {
         />
 
         <Input
-          flex="1"
-          minW="200px"
           placeholder="Filtrar por materia..."
           value={filtroMateria}
           onChange={(e) => setFiltroMateria(e.target.value)}
+          flex="1"
+          minW="200px"
           bg="white"
           borderColor="transparent"
           _hover={{ borderColor: "gray.200" }}
@@ -153,54 +145,45 @@ function ProfesoresMaterias() {
         />
       </Box>
 
-      {/* Tabla */}
       <Table variant="simple">
         <Thead>
           <Tr>
-            <Th>Docente</Th>
+            <Th>Profesor</Th>
             <Th>Materia</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {profesoresMateriasFiltradas.map((pm) => {
-            const nombreProfesor =
-              profesoresMap[pm.profesorId] || "Docente no encontrado";
-            const nombreMateria =
-              materiasMap[pm.materiaId] || "Materia no encontrada";
-
-            return (
-              <Tr key={pm.id}>
-                <Td>{nombreProfesor}</Td>
-                <Td>{nombreMateria}</Td>
-                <Td>
-                  <Button
-                    size="sm"
-                    bg="brand.500"
-                    color="white"
-                    _hover={{ bg: "brand.600" }}
-                    mr={2}
-                    onClick={() => setEditingProfesorMateria(pm)}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    size="sm"
-                    bg="brand.500"
-                    color="white"
-                    _hover={{ bg: "brand.600" }}
-                    onClick={() => openConfirmModal(pm, "delete")}
-                  >
-                    Eliminar
-                  </Button>
-                </Td>
-              </Tr>
-            );
-          })}
+          {profesoresMateriasFiltradas.map((pm) => (
+            <Tr key={pm.id}>
+              <Td>{profesoresMap[pm.profesorId] || pm.profesorId}</Td>
+              <Td>{materiasMap[pm.materiaId] || pm.materiaId}</Td>
+              <Td>
+                <Button
+                  size="sm"
+                  mr={2}
+                  bg="brand.500"
+                  color="white"
+                  _hover={{ bg: "brand.600" }}
+                  onClick={() => setEditingProfesorMateria(pm)}
+                >
+                  Editar
+                </Button>
+                <Button
+                  size="sm"
+                  bg="brand.500"
+                  color="white"
+                  _hover={{ bg: "brand.600" }}
+                  onClick={() => openConfirmModal(pm, "delete")}
+                >
+                  Eliminar
+                </Button>
+              </Td>
+            </Tr>
+          ))}
         </Tbody>
       </Table>
 
-      {/* Modales */}
       {crearModalOpen && (
         <CrearProfesorMateriaModal
           onClose={() => {
@@ -224,9 +207,8 @@ function ProfesoresMaterias() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Eliminar Asignación"
-        message="¿Estás seguro que deseas eliminar esta asignación?"
+        message="¿Estás seguro que deseas eliminar esta asignación de profesor a materia?"
         onConfirm={handleConfirm}
-        colorScheme="brand"
       />
     </Box>
   );

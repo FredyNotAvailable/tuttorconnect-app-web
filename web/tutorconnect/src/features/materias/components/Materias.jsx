@@ -9,9 +9,9 @@ import {
   Th,
   Td,
   Button,
-  Input,
-  useToast
+  useToast,
 } from "@chakra-ui/react";
+import ReactSelect from "react-select";
 import CrearMateriaModal from "./CrearMateriaModal";
 import EditMateriaModal from "./EditMateriaModal";
 import ConfirmModal from "../../common/components/ConfirmModal";
@@ -49,26 +49,37 @@ function Materias() {
     }
   };
 
-  const materiasFiltradas = materias.filter(m =>
-    m.nombre.toLowerCase().includes(filtroNombre.toLowerCase())
-  );
+  // Filtrado usando ReactSelect
+  const materiasFiltradas = filtroNombre
+    ? materias.filter(m => m.nombre === filtroNombre)
+    : materias;
+
+  const nombreOptions = materias.map(m => ({ value: m.nombre, label: m.nombre }));
 
   return (
     <Box>
       <Heading mb={4} color="brand.500">Materias</Heading>
 
-      <Box display="flex" mb={4} gap={2}>
-        <Button bg="brand.500" color="white" _hover={{ bg: "brand.600" }} onClick={() => setCrearModalOpen(true)}>
+      <Box display="flex" mb={4} gap={2} flexWrap="wrap">
+        <Button
+          bg="brand.500"
+          color="white"
+          _hover={{ bg: "brand.600" }}
+          onClick={() => setCrearModalOpen(true)}
+          minW="160px"
+        >
           Agregar Materia
         </Button>
-        <Input
-          placeholder="Buscar por nombre..."
-          value={filtroNombre}
-          onChange={(e) => setFiltroNombre(e.target.value)}
-          bg="white" borderColor="transparent"
-          _hover={{ borderColor: "gray.200" }}
-          focusBorderColor="brand.500"
-        />
+
+        <Box flex="1" minW="200px">
+          <ReactSelect
+            placeholder="Filtrar por nombre..."
+            options={nombreOptions}
+            value={filtroNombre ? { value: filtroNombre, label: filtroNombre } : null}
+            onChange={(option) => setFiltroNombre(option ? option.value : "")}
+            isClearable
+          />
+        </Box>
       </Box>
 
       <Table variant="simple">

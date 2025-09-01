@@ -1,6 +1,6 @@
 // src/features/usuarios/models/UsuarioRoles.js
 export const Roles = Object.freeze({
   ESTUDIANTE: "estudiante",
-  Docente: "docente",
+  DOCENTE: "docente",
   ADMIN: "admin",
 });
