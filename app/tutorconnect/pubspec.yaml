@@ -19,14 +19,37 @@ dependencies:
   provider: ^6.1.5+1
   flutter_riverpod: ^2.6.1
   intl: ^0.20.2
+  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: 0.14.4
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/login_banner.png
+    - assets/images/app_banner.png
+    - assets/images/app_icon.png # icono de la app
+
+# 🔹 Configuración del splash screen
+flutter_native_splash:
+  color: "#910048" # (opcional) color de fondo
+  image: assets/images/app_icon.png # Imagen centrada (tipo logo)
+  # background_image: assets/images/app_icon.png # Imagen de fondo que ocupa toda la pantalla910048
+  # background_image: assets/images/app_banner.png # Imagen de fondo que ocupa toda la pantalla910048
+  android: true
+  ios: true
+  web: false
+
+# 🔹 Configuración del icono de la app
+flutter_icons:
+  android: true
+  ios: true
+  web: false
+  image_path: "assets/images/app_icon.png" # usado para iOS
+  adaptive_icon_background: "#910048" # color de fondo para Android
+  adaptive_icon_foreground: "assets/images/app_icon.png"
