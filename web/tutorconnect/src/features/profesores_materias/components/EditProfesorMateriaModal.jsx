@@ -38,7 +38,7 @@ export default function EditProfesorMateriaModal({ profesorMateria, onClose }) {
   useEffect(() => {
     const cargarDatos = async () => {
       const allUsuarios = await UsuarioRepository.getAllUsuarios();
-      const docentes = allUsuarios.filter((u) => u.rol === Roles.Docente || u.rol === "Docente");
+      const docentes = allUsuarios.filter((u) => u.rol === Roles.DOCENTE);
       setProfesores(docentes);
 
       const allMallas = await MallaCurricularRepository.getAllMallas();

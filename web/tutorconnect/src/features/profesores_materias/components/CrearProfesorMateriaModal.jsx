@@ -39,7 +39,7 @@ export default function CrearProfesorMateriaModal({ onClose }) {
     const cargarDatos = async () => {
       const allUsuarios = await UsuarioRepository.getAllUsuarios();
       const docentes = allUsuarios.filter(
-        (u) => u.rol === Roles.Docente || u.rol === "Docente"
+        (u) => u.rol === Roles.DOCENTE
       );
       setProfesores(docentes);
 

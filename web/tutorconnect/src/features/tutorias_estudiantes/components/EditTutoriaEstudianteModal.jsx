@@ -21,21 +21,38 @@ import { Roles } from "../../usuarios/models/UsuarioRoles";
 export default function EditTutoriaEstudianteModal({ tutoriaEstudiante, onClose }) {
   const [tutoriaId, setTutoriaId] = useState(tutoriaEstudiante.tutoriaId || "");
   const [estudianteId, setEstudianteId] = useState(tutoriaEstudiante.estudianteId || "");
-
   const [tutorias, setTutorias] = useState([]);
   const [estudiantes, setEstudiantes] = useState([]);
+  const [profesoresMap, setProfesoresMap] = useState({});
   const toast = useToast();
 
   useEffect(() => {
     const cargarDatos = async () => {
-      const [allTutorias, allUsuarios] = await Promise.all([
-        TutoriaRepository.getAllTutorias(),
-        UsuarioRepository.getAllUsuarios(),
-      ]);
+      try {
+        const [allTutorias, allUsuarios] = await Promise.all([
+          TutoriaRepository.getAllTutorias(),
+          UsuarioRepository.getAllUsuarios(),
+        ]);
 
-      setTutorias(allTutorias);
-      setEstudiantes(allUsuarios.filter(u => u.rol === Roles.ESTUDIANTE));
+        setTutorias(allTutorias);
+        setEstudiantes(allUsuarios.filter(u => u.rol === Roles.ESTUDIANTE));
+
+        // Crear un mapa de profesores por ID (asegurando que los IDs sean strings)
+        const profesores = allUsuarios.filter(u => u.rol === Roles.DOCENTE);
+        const map = {};
+        profesores.forEach(p => {
+          map[String(p.id)] = p.nombreCompleto;
+        });
+        setProfesoresMap(map);
+      } catch (error) {
+        toast({
+          title: "Error cargando datos",
+          description: error.message,
+          status: "error",
+        });
+      }
     };
+
     cargarDatos();
   }, []);
 
@@ -63,10 +80,17 @@ export default function EditTutoriaEstudianteModal({ tutoriaEstudiante, onClose 
     }
   };
 
-  const tutoriaOptions = tutorias.map(t => ({
-    value: t.id,
-    label: `${t.tema} (${t.fecha ? new Date(t.fecha).toLocaleDateString() : ''}) - ${t.profesorId}`,
-  }));
+  const tutoriaOptions = tutorias.map(t => {
+    const profesorIdStr = String(t.profesorId);
+    const nombreProfesor = profesoresMap[profesorIdStr];
+    if (!nombreProfesor) {
+      console.warn(`Profesor no encontrado para tutoría "${t.tema}", id: ${t.profesorId}`);
+    }
+    return {
+      value: t.id,
+      label: `${t.tema} (${t.fecha ? new Date(t.fecha).toLocaleDateString() : ''}) - ${nombreProfesor || 'Profesor desconocido'}`,
+    };
+  });
 
   const estudianteOptions = estudiantes.map(e => ({
     value: e.id,

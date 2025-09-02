@@ -57,7 +57,7 @@ function ProfesoresMaterias() {
 
     const pMap = {};
     allUsuarios
-      .filter((u) => u.rol === Roles.DOCENTE || u.rol === "Docente")
+      .filter((u) => u.rol === Roles.DOCENTE)
       .forEach((p) => (pMap[p.id] = p.nombreCompleto));
     setProfesoresMap(pMap);
 

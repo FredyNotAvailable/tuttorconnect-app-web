@@ -13,6 +13,7 @@ import {
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { login } from "../services/auth";
 import { useNavigate } from "react-router-dom";
+import { Roles } from "../features/usuarios/models/UsuarioRoles"
 
 function Login() {
   const navigate = useNavigate();
@@ -27,12 +28,13 @@ function Login() {
     const res = await login(email, password);
     setLoading(false);
 
-    if (res.user) {
+    if (res.user && res.user.rol === Roles.ADMIN) {
       navigate("/dashboard");
     } else {
-      alert(res.error);
+      alert(res.error || "No tienes permisos");
     }
   };
+
 
   return (
     <Box display="flex" alignItems="center" justifyContent="center" minH="100vh" bg="background.DEFAULT">

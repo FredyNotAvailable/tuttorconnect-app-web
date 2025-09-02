@@ -49,7 +49,7 @@ export default function CrearTutoriaModal({ onClose }) {
         ProfesorMateriaRepository.getAllProfesoresMaterias(),
       ]);
 
-      setProfesores(allUsuarios.filter(u => u.rol === Roles.Docente || u.rol === "Docente"));
+      setProfesores(allUsuarios.filter(u => u.rol === Roles.DOCENTE || u.rol === "Docente"));
       setMaterias(allMaterias);
       setAulas(allAulas);
       setProfesorMaterias(allProfesorMaterias);

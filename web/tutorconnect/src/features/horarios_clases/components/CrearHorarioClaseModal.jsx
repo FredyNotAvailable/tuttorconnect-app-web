@@ -22,6 +22,12 @@ import { UsuarioRepository } from "../../usuarios/repositories/UsuarioRepository
 import { AulaRepository } from "../../aulas/repositories/AulaRepository"; 
 import { ProfesorMateriaRepository } from "../../profesores_materias/repositories/ProfesorMateriaRepository";
 import { Roles } from "../../usuarios/models/UsuarioRoles";
+import { AulaEstado } from "../../aulas/models/Aula";
+import { Aula } from "../../aulas/models/Aula";
+
+
+// ...
+
 
 const diasSemana = ["lunes", "martes", "miercoles", "jueves", "viernes"];
 
@@ -50,9 +56,12 @@ export default function CrearHorarioClaseModal({ onClose }) {
         ProfesorMateriaRepository.getAllProfesoresMaterias(),
       ]);
 
-      setProfesores(allUsuarios.filter(u => u.rol === Roles.Docente));
+      setProfesores(allUsuarios.filter(u => u.rol === Roles.DOCENTE));
       setMaterias(allMaterias);
-      setAulas(allAulas);
+
+      // Filtrar solo aulas disponibles
+      const aulasDisponibles = allAulas.filter(a => a.estado === AulaEstado.DISPONIBLE);
+      setAulas(aulasDisponibles);
 
       // Crear mapa profesorId → [materiaId]
       const map = {};
@@ -62,6 +71,7 @@ export default function CrearHorarioClaseModal({ onClose }) {
       });
       setProfesorMateriasMap(map);
     };
+
     cargarDatos();
   }, []);
 
