@@ -57,6 +57,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Verifica si un correo electrónico existe en la base de datos
+  Future<bool> checkEmailExists(String email) async {
+    try {
+      final exists = await repository.checkUserExistsByEmail(email);
+      if (!exists) {
+        state = state.copyWith(error: 'El correo electrónico no está registrado.');
+      } else {
+        state = state.copyWith(error: null); // Limpiar error si existe
+      }
+      return exists;
+    } catch (e) {
+      state = state.copyWith(error: 'Error al verificar el correo: $e');
+      return false;
+    }
+  }
+
   /// Logout
   Future<void> logout() async {
     await repository.logout();

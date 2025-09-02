@@ -69,11 +69,15 @@ class AuthRepositoryImpl {
   /// Enviar correo de restablecimiento de contraseña
   Future<void> sendPasswordResetEmail(String email) async {
     try {
+      // Configurar idioma a español
+      _auth.setLanguageCode('es'); // 'es' para español
+
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
       throw RepositoryException('Error al enviar correo de recuperación: $e');
     }
   }
+
 
   /// Logout
   Future<void> logout() async {

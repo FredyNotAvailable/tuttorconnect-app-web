@@ -4,10 +4,10 @@ import 'package:tutorconnect/features/auth/presentation/screens/login_screen.dar
 import 'package:tutorconnect/presentation/screens/home_screen.dart';
 import 'package:tutorconnect/presentation/screens/clase_detalle_screen.dart';
 import 'package:tutorconnect/features/materias/data/models/materia_model.dart';
-import 'package:tutorconnect/presentation/screens/crear_tutoria_screen.dart';
+import 'package:tutorconnect/features/tutorias/presentation/screens/crear_tutoria_screen.dart';
 import 'package:tutorconnect/features/tutorias/data/models/tutoria_model.dart';
-import 'package:tutorconnect/presentation/screens/tutoria_detalle_screen.dart';
-import 'package:tutorconnect/presentation/screens/tutoria_editar_screen.dart'; // 🔹 Importa la pantalla de edición
+import 'package:tutorconnect/features/tutorias/presentation/screens/tutoria_detalle_screen.dart';
+import 'package:tutorconnect/features/tutorias/presentation/screens/tutoria_editar_screen.dart'; // 🔹 Importa la pantalla de edición
 
 class AppRoutes {
   static const String login = '/login';

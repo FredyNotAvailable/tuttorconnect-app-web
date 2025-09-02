@@ -6,13 +6,21 @@ import 'package:tutorconnect/features/materias/application/states/materia_state.
 class MateriaNotifier extends StateNotifier<MateriaState> {
   final MateriasRepositoryImpl repository;
 
-  MateriaNotifier(this.repository) : super(MateriaState());
+  MateriaNotifier(this.repository) : super(MateriaState()) {
+    _init();
+  }
+
+  Future<void> _init() async {
+    await getAllMaterias(); // 🔹 carga materias al iniciar
+  }
+
 
   /// Obtener todas las materias
   Future<List<MateriaModel>> getAllMaterias() async {
     state = state.copyWith(loading: true, error: null);
     try {
       final materias = await repository.getAllMaterias();
+      print('DEBUG: Materias cargadas desde Firebase: ${materias.length}');
       state = state.copyWith(materias: materias, loading: false);
       return materias;
     } catch (e) {

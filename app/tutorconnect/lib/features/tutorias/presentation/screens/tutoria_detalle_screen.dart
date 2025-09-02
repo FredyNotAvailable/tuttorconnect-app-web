@@ -4,16 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:tutorconnect/core/routes/app_routes.dart';
 import 'package:tutorconnect/features/asistencia_tutoria/application/providers/asistencia_tutoria_provider.dart';
+import 'package:tutorconnect/features/aulas/data/models/aula_model.dart';
+import 'package:tutorconnect/features/materias/data/models/materia_model.dart';
 import 'package:tutorconnect/features/tutorias/application/providers/tutoria_provider.dart';
 import 'package:tutorconnect/features/tutorias/data/models/tutoria_model.dart';
-import 'package:tutorconnect/features/materias/helpers/materia_helper.dart';
-import 'package:tutorconnect/features/aulas/helpers/aula_helper.dart';
-import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
-import 'package:tutorconnect/features/usuarios/helpers/usuario_helper.dart';
+import 'package:tutorconnect/features/materias/application/providers/materia_provider.dart';
+import 'package:tutorconnect/features/aulas/application/providers/aula_provider.dart';
+import 'package:tutorconnect/features/usuarios/application/providers/usuario_provider.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
 import 'package:tutorconnect/features/asistencia_tutoria/data/models/asistencia_tutoria_model.dart';
-import 'package:tutorconnect/features/tutoria_estudiante/helper/tutoria_estudiante_helper.dart';
-import 'package:tutorconnect/features/asistencia_tutoria/helpers/asistencia_tutoria_helper.dart';
+import 'package:tutorconnect/features/tutoria_estudiante/application/providers/tutorias_estudiantes_provider.dart';
+import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
 
 class DetalleTutoriaScreen extends ConsumerWidget {
   final TutoriaModel tutoria;
@@ -28,20 +29,68 @@ class DetalleTutoriaScreen extends ConsumerWidget {
     final currentUser = authState.user;
     final isDocente = currentUser?.rol == UsuarioRol.docente;
 
+    // 🔹 Tutoría actual
     final tutoriaState = ref.watch(tutoriaProvider);
     TutoriaModel currentTutoria = tutoriaState.tutorias?.firstWhere(
-        (t) => t.id == tutoria.id,
-        orElse: () => tutoria,
-    ) ?? tutoria;
+          (t) => t.id == tutoria.id,
+          orElse: () => tutoria,
+        ) ??
+        tutoria;
 
-    final aula = getAulaById(ref, tutoria.aulaId);
-    final materia = getMateriaById(ref, tutoria.materiaId);
-    final profesor = getUsuarioById(ref, tutoria.profesorId);
+    // 🔹 Aula, materia y profesor desde providers
+    final aulaState = ref.watch(aulaProvider);
+    final materiaState = ref.watch(materiaProvider);
+    final usuarioState = ref.watch(usuarioProvider);
 
-    // Escuchar cambios de asistencias para refrescar la UI automáticamente
-    ref.watch(asistenciaTutoriaProvider);
+    final aula = aulaState.aulas?.firstWhere(
+      (a) => a.id == tutoria.aulaId,
+      orElse: () => AulaModel(
+        id: '',
+        nombre: 'Desconocida',
+        tipo: '',
+        estado: AulaEstado.disponible, // valor por defecto
+      ),
+    );
 
-    final estudiantes = getAllEstudiantesByTutoria(ref, tutoria.id);
+
+    final materia = materiaState.materias?.firstWhere(
+      (m) => m.id == tutoria.materiaId,
+      orElse: () => MateriaModel(id: '', nombre: 'Desconocida'),
+    );
+
+    final profesor = usuarioState.usuarios?.firstWhere(
+      (u) => u.id == tutoria.profesorId,
+      orElse: () => UsuarioModel(
+        id: '',
+        nombreCompleto: 'Docente desconocido',
+        correo: '',
+        rol: UsuarioRol.docente,
+        fcmToken: '',
+      ),
+    );
+
+    // 🔹 Estudiantes inscritos desde provider
+    final tutoriasEstudiantesState = ref.watch(tutoriasEstudiantesProvider);
+    List<UsuarioModel> estudiantes = [];
+    if (tutoriasEstudiantesState.tutoriasEstudiantes != null) {
+      estudiantes = tutoriasEstudiantesState.tutoriasEstudiantes!
+          .where((te) => te.tutoriaId == tutoria.id)
+          .map((te) => usuarioState.usuarios?.firstWhere(
+                (u) => u.id == te.estudianteId,
+                orElse: () => UsuarioModel(
+                  id: '',
+                  nombreCompleto: 'Estudiante desconocido',
+                  correo: '',
+                  rol: UsuarioRol.estudiante,
+                  fcmToken: '',
+                ),
+              ))
+          .whereType<UsuarioModel>()
+          .toList();
+    }
+
+    // 🔹 Escuchar cambios en asistencias
+    final asistenciasState = ref.watch(asistenciaTutoriaProvider);
 
     // ==========================
     // Verificar si la tutoría terminó
@@ -56,7 +105,8 @@ class DetalleTutoriaScreen extends ConsumerWidget {
       int.parse(horaFinParts[1]),
     );
 
-    final tutoriaTerminada = ahora.isAfter(horaFin) && currentTutoria.estado != TutoriaEstado.cancelada;
+    final tutoriaTerminada =
+        ahora.isAfter(horaFin) && currentTutoria.estado != TutoriaEstado.cancelada;
 
     // Actualizar estado a finalizada si corresponde
     if (tutoriaTerminada && currentTutoria.estado != TutoriaEstado.finalizada) {
@@ -70,46 +120,57 @@ class DetalleTutoriaScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            Text('Tema: ${currentTutoria.tema}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              'Tema: ${currentTutoria.tema}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Text('Descripción: ${currentTutoria.descripcion.isNotEmpty ? currentTutoria.descripcion : "-"}'),
             const SizedBox(height: 8),
-            Text('Profesor: ${profesor.nombreCompleto}'),
+            Text('Profesor: ${profesor?.nombreCompleto ?? "Desconocido"}'),
             const SizedBox(height: 8),
-            Text('Materia: ${materia.nombre}'),
+            Text('Materia: ${materia?.nombre ?? "Desconocida"}'),
             const SizedBox(height: 8),
-            Text('Aula: ${aula.nombre} - ${aula.tipo}'),
+            Text('Aula: ${aula?.nombre ?? "Desconocida"} - ${aula?.tipo ?? ""}'),
             const SizedBox(height: 8),
-            Text('Fecha y Hora: ${formatDate(currentTutoria.fecha.toDate())} | ${currentTutoria.horaInicio} - ${currentTutoria.horaFin}'),
+            Text(
+              'Fecha y Hora: ${formatDate(currentTutoria.fecha.toDate())} | ${currentTutoria.horaInicio} - ${currentTutoria.horaFin}',
+            ),
             const SizedBox(height: 8),
             Text('Estado: ${currentTutoria.estado.name}'),
             const SizedBox(height: 16),
-            const Text('Estudiantes inscritos:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text('Estudiantes inscritos:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
 
             ...estudiantes.map((estudiante) {
-              final asistencias = getAllAsistenciaByEstudiante(ref, estudiante.id, tutoriaId: currentTutoria.id);
+              // 🔹 Buscar asistencia del estudiante en esta tutoría
+              final asistenciasEstudiante = asistenciasState.asistencias
+                      ?.where((a) =>
+                          a.estudianteId == estudiante.id &&
+                          a.tutoriaId == currentTutoria.id)
+                      .toList() ??
+                  [];
 
-              // Determinar si existe asistencia
-              final asistenciaExiste = asistencias.isNotEmpty;
+              final asistenciaExiste = asistenciasEstudiante.isNotEmpty;
               final asistencia = asistenciaExiste
-                  ? asistencias.first
+                  ? asistenciasEstudiante.first
                   : AsistenciaTutoriaModel(
                       id: '',
                       estudianteId: estudiante.id,
                       tutoriaId: currentTutoria.id,
-                      estado: AsistenciaEstado.ausente, // temporal
+                      estado: AsistenciaEstado.ausente,
                       fecha: Timestamp.now(),
                     );
-
-              print("Asistencia estudiante ${estudiante.nombreCompleto}: ${asistencia.id} (${asistencia.estado})");
 
               return ListTile(
                 leading: const Icon(Icons.person),
                 title: Text(estudiante.nombreCompleto),
                 trailing: ElevatedButton(
                   child: Text(
-                    asistenciaExiste ? (asistencia.estado == AsistenciaEstado.presente ? 'Presente' : 'Ausente') : 'Marcar', // <-- si no existe, mostrar Marcar
+                    asistenciaExiste
+                        ? (asistencia.estado == AsistenciaEstado.presente ? 'Presente' : 'Ausente')
+                        : 'Marcar',
                   ),
                   onPressed: (isDocente && !tutoriaTerminada)
                       ? () => _mostrarModalAsistencia(context, ref, estudiante.id, asistencia)
@@ -117,11 +178,9 @@ class DetalleTutoriaScreen extends ConsumerWidget {
                 ),
               );
             }).toList(),
-
           ],
         ),
       ),
-
       floatingActionButton: isDocente && !tutoriaTerminada
           ? FloatingActionButton(
               child: const Icon(Icons.edit),
@@ -141,7 +200,8 @@ class DetalleTutoriaScreen extends ConsumerWidget {
     );
   }
 
-  void _mostrarModalAsistencia(BuildContext context, WidgetRef ref, String estudianteId, AsistenciaTutoriaModel asistencia) {
+  void _mostrarModalAsistencia(
+      BuildContext context, WidgetRef ref, String estudianteId, AsistenciaTutoriaModel asistencia) {
     showModalBottomSheet(
       context: context,
       builder: (modalContext) {
@@ -153,7 +213,8 @@ class DetalleTutoriaScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Marcar asistencia', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Marcar asistencia',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 12),
                 ListTile(
                   title: const Text('Presente'),
@@ -183,13 +244,15 @@ class DetalleTutoriaScreen extends ConsumerWidget {
                         fecha: Timestamp.now(),
                       );
 
+                      final asistenciaProvider = ref.read(asistenciaTutoriaProvider.notifier);
+
                       if (asistencia.id.isEmpty) {
-                        await createAsistenciaHelper(ref, nuevaAsistencia);
+                        await asistenciaProvider.createAsistencia(nuevaAsistencia);
                       } else {
-                        await updateAsistenciaHelper(ref, nuevaAsistencia);
+                        await asistenciaProvider.updateAsistencia(nuevaAsistencia);
                       }
 
-                      Navigator.pop(modalContext); // cerrar modal
+                      Navigator.pop(modalContext);
                     }
                   },
                 ),

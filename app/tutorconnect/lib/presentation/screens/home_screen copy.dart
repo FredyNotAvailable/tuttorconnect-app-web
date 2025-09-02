@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tutorconnect/core/themes/app_colors.dart';
 import 'package:tutorconnect/core/themes/app_constants.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
 import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
@@ -69,39 +70,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       "Perfil",
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          titles[_selectedIndex],
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.surface, // <-- color de la letra
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary, // <-- fondo primario
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () => _logout(context),
-            icon: Icon(
-              Icons.logout,
-              color: Theme.of(context).colorScheme.surface, // <-- ícono en surface
+return Scaffold(
+  appBar: PreferredSize(
+    preferredSize: const Size.fromHeight(64), // altura total del AppBar
+    child: AppBar(
+      backgroundColor: AppColors.primary, // <-- cambio de color
+      elevation: 0,
+      flexibleSpace: Padding(
+        padding: const EdgeInsets.all( AppPaddingConstants.global ),
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Text(
+            titles[_selectedIndex],
+            style: TextStyle(
+              color: Colors.white, // Para que contraste con el fondo primario
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ],
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppPaddingConstants.global), // padding global para el contenido
-        child: screens[_selectedIndex],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: navItems,
-        type: BottomNavigationBarType.fixed,
-      ),
-    );
+      actions: [
+        IconButton(
+          onPressed: () => _logout(context),
+          icon: const Icon(Icons.logout, color: Colors.white),
+        ),
+      ],
+    ),
+  ),
+  body: Padding(
+    padding: const EdgeInsets.all(AppPaddingConstants.global),
+    child: screens[_selectedIndex],
+  ),
+  bottomNavigationBar: BottomNavigationBar(
+    currentIndex: _selectedIndex,
+    onTap: (index) => setState(() => _selectedIndex = index),
+    items: navItems,
+    type: BottomNavigationBarType.fixed,
+  ),
+);
+
 
   }
 }

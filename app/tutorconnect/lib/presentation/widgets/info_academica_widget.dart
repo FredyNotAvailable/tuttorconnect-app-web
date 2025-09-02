@@ -109,7 +109,7 @@ class _InfoAcademicaWidgetState extends ConsumerState<InfoAcademicaWidget> {
                   const SizedBox(height: 4),
                   ...getMateriasByMallaId(ref, malla.id).map((matMalla) {
                     final materia = getMateriaById(ref, matMalla.materiaId);
-                    print("Materia: ${materia?.nombre}");
+                    print("Materia: ${materia.nombre}");
                     return Padding(
                       padding: const EdgeInsets.only(left: 12, bottom: 2),
                       child: Text(
