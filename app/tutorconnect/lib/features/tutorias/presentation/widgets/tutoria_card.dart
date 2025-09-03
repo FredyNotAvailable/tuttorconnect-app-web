@@ -22,20 +22,37 @@ class TutoriaCard extends StatelessWidget {
     required this.formatDate,
   });
 
+
 @override
 Widget build(BuildContext context) {
+  // 🔹 Multi-line debug print de TutoriaModel
+  debugPrint('''
+================ Tutoria Debug =================
+ID: ${tutoria.id}
+Profesor ID: ${tutoria.profesorId}
+Materia ID: ${tutoria.materiaId}
+Aula ID: ${tutoria.aulaId}
+Fecha: ${tutoria.fecha.toDate()}
+Hora Inicio: ${tutoria.horaInicio}
+Hora Fin: ${tutoria.horaFin}
+Estado: ${tutoria.estado}
+Tema: ${tutoria.tema}
+Descripcion: ${tutoria.descripcion}
+================================================
+''');
+
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(16),
     child: SizedBox(
-      width: double.infinity, // Ocupa todo el ancho disponible
+      width: double.infinity,
       child: Card(
         color: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         elevation: 3,
-        margin: const EdgeInsets.symmetric(vertical: 6), // solo margen vertical
+        margin: const EdgeInsets.symmetric(vertical: 6),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -89,5 +106,7 @@ Widget build(BuildContext context) {
     ),
   );
 }
+
+
 
 }

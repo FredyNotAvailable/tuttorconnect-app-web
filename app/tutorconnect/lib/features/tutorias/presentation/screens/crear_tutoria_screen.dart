@@ -330,27 +330,37 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _estudiantesSeleccionados.map((e) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Opacity(
-                        opacity: 0.6, // semi-opaco
-                        child: Chip(
-                          label: Text(
-                            e.nombreCompleto,
-                            style: const TextStyle(color: Colors.black87),
+
+                // 🔹 Debug: imprimir en consola
+                Builder(builder: (_) {
+                  debugPrint('Lista de estudiantes seleccionados:');
+                  for (var e in _estudiantesSeleccionados) {
+                    debugPrint(' - ${e.nombreCompleto} (ID: ${e.id})');
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _estudiantesSeleccionados.map((e) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Opacity(
+                          opacity: 0.6, // semi-opaco
+                          child: Chip(
+                            label: Text(
+                              e.nombreCompleto,
+                              style: const TextStyle(color: Colors.black87),
+                            ),
+                            backgroundColor: Colors.grey[300], // color más claro
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
-                          backgroundColor: Colors.grey[300], // color más claro
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                      );
+                    }).toList(),
+                  );
+                }),
+
                 const SizedBox(height: 12),
               ],
+
 
 
               Center(

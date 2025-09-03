@@ -26,7 +26,10 @@ class SolicitudTutoriaCard extends ConsumerWidget {
     final tutoria = getTutoriaById(ref, solicitud.tutoriaId);
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: AppPaddingConstants.global),
+      margin: const EdgeInsets.symmetric(
+        vertical: 4,
+        horizontal: AppPaddingConstants.global,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppPaddingConstants.global),
         child: Row(
@@ -45,18 +48,21 @@ class SolicitudTutoriaCard extends ConsumerWidget {
                 children: [
                   Text(
                     'Tutoría: ${tutoria.tema}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text('Estudiante: ${estudiante.nombreCompleto}'),
                   const SizedBox(height: 2),
                   Text('Enviado: ${formatDate(solicitud.fechaEnvio)}'),
-                  // const SizedBox(height: 2),
-                  // Text(
-                  //   'Estado: ${solicitud.estado.value[0].toUpperCase()}${solicitud.estado.value.substring(1)}',
-                  // ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Estado: ${solicitud.estado.value[0].toUpperCase()}${solicitud.estado.value.substring(1)}',
+                  ),
                   const SizedBox(height: 6),
-                  // Botones siempre visibles si el estado es pendiente
+                  // Botones visibles si el estado es pendiente
                   if (solicitud.estado == EstadoSolicitud.pendiente)
                     Row(
                       children: [
@@ -65,23 +71,32 @@ class SolicitudTutoriaCard extends ConsumerWidget {
                             SolicitudTutoriaActions.showConfirmAction(
                               context: context,
                               title: 'Aceptar solicitud',
-                              message: '¿Estás seguro de aceptar esta solicitud?',
-                              onConfirm: () =>
-                                  SolicitudTutoriaActions.aceptarSolicitud(ref: ref, solicitud: solicitud),
+                              message:
+                                  '¿Estás seguro de aceptar esta solicitud?',
+                              onConfirm: () => SolicitudTutoriaActions
+                                  .aceptarSolicitud(
+                                ref: ref,
+                                solicitud: solicitud,
+                              ),
                             );
                           },
                           child: const Text('Aceptar'),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey),
                           onPressed: () {
                             SolicitudTutoriaActions.showConfirmAction(
                               context: context,
                               title: 'Rechazar solicitud',
-                              message: '¿Estás seguro de rechazar esta solicitud?',
-                              onConfirm: () =>
-                                  SolicitudTutoriaActions.rechazarSolicitud(ref: ref, solicitud: solicitud),
+                              message:
+                                  '¿Estás seguro de rechazar esta solicitud?',
+                              onConfirm: () => SolicitudTutoriaActions
+                                  .rechazarSolicitud(
+                                ref: ref,
+                                solicitud: solicitud,
+                              ),
                             );
                           },
                           child: const Text('Rechazar'),

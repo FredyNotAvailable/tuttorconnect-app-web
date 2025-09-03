@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tutorconnect/core/routes/app_routes.dart';
 import 'package:tutorconnect/features/mallas_curriculares/application/providers/malla_curricular_provider.dart';
 import 'package:tutorconnect/features/materias/application/providers/materia_provider.dart';
 import 'package:tutorconnect/features/materias/helpers/materia_helper.dart';
@@ -13,6 +12,7 @@ import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
 import 'package:tutorconnect/features/profesores_materias/helpers/profesor_materia_helper.dart';
 import 'package:tutorconnect/features/profesores_materias/data/models/profesor_materia_model.dart';
 import 'package:tutorconnect/features/materias/data/models/materia_model.dart';
+import 'package:tutorconnect/presentation/clases/clase_card.dart';
 
 class ClasesWidget extends ConsumerStatefulWidget {
   final UsuarioModel usuario;
@@ -27,14 +27,20 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
   @override
   void initState() {
     super.initState();
+    // ⚡ Cargar datos después del primer frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cargarDatos();
+    });
+  }
 
-    Future.microtask(() => ref.read(usuarioProvider.notifier).getAllUsuarios());
-    Future.microtask(() => ref.read(matriculaProvider.notifier).getAllMatriculas());
-    Future.microtask(() => ref.read(mallaCurricularProvider.notifier).getAllMallas());
-    Future.microtask(() => ref.read(materiaMallaProvider.notifier).getAllMateriasMalla());
-    Future.microtask(() => ref.read(materiaProvider.notifier).getAllMaterias());
-    Future.microtask(() => ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias());
-    Future.microtask(() => ref.read(materiaMallaProvider.notifier).getAllMateriasMalla());
+  void _cargarDatos() {
+    // Llamadas directas a los providers
+    ref.read(usuarioProvider.notifier).getAllUsuarios();
+    ref.read(matriculaProvider.notifier).getAllMatriculas();
+    ref.read(mallaCurricularProvider.notifier).getAllMallas();
+    ref.read(materiaMallaProvider.notifier).getAllMateriasMalla();
+    ref.read(materiaProvider.notifier).getAllMaterias();
+    ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias();
   }
 
   @override
@@ -44,7 +50,8 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
     if (widget.usuario.rol == UsuarioRol.estudiante) {
       materias = getMateriasByEstudianteId(ref, widget.usuario.id);
     } else if (widget.usuario.rol == UsuarioRol.docente) {
-      final List<ProfesorMateriaModel> relaciones = getMateriasByProfesorId(ref, widget.usuario.id);
+      final List<ProfesorMateriaModel> relaciones =
+          getMateriasByProfesorId(ref, widget.usuario.id);
       materias = relaciones.map((r) => getMateriaById(ref, r.materiaId)).toList();
     } else {
       return const Center(child: Text('Rol no reconocido'));
@@ -65,25 +72,7 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
       itemCount: materias.length,
       itemBuilder: (context, index) {
         final materia = materias[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: InkWell(
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                AppRoutes.claseDetalle,
-                arguments: materia,
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                materia.nombre,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-          ),
-        );
+        return ClaseCard(materia: materia);
       },
     );
   }

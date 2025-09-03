@@ -32,16 +32,19 @@ class TutoriaEstudianteNotifier extends StateNotifier<TutoriaEstudianteState> {
     }
   }
 
-  /// Crear relación
   Future<void> createTutoriaEstudiante(TutoriaEstudianteModel te) async {
     state = state.copyWith(loading: true, error: null);
     try {
+      print('Intentando crear relación: ${te.toJson()}');
       final created = await repository.createTutoriaEstudiante(te);
+      print('Creación exitosa: ${created.toJson()}');
       state = state.copyWith(tutoriaEstudiante: created, loading: false);
     } catch (e) {
+      print('Error en createTutoriaEstudiante: $e'); // <- ver el error real
       state = state.copyWith(loading: false, error: e.toString());
     }
   }
+
 
   /// Actualizar relación
   Future<void> updateTutoriaEstudiante(TutoriaEstudianteModel te) async {

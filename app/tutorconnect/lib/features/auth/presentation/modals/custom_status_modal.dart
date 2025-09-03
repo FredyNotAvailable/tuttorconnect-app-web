@@ -17,6 +17,7 @@ class CustomStatusModal extends StatelessWidget {
   Widget build(BuildContext context) {
     // Icono según el estado
     Widget iconWidget;
+    // ignore: unused_local_variable
     String title;
 
     switch (status) {

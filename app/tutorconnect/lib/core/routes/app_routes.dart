@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:tutorconnect/features/auth/presentation/screens/login_screen.dart';
 import 'package:tutorconnect/presentation/screens/home_screen.dart';
-import 'package:tutorconnect/presentation/screens/clase_detalle_screen.dart';
+import 'package:tutorconnect/presentation/clases/clase_detalle_screen.dart';
 import 'package:tutorconnect/features/materias/data/models/materia_model.dart';
 import 'package:tutorconnect/features/tutorias/presentation/screens/crear_tutoria_screen.dart';
 import 'package:tutorconnect/features/tutorias/data/models/tutoria_model.dart';

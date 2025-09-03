@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tutorconnect/core/routes/app_routes.dart';
 import 'package:tutorconnect/core/themes/app_constants.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
 import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
-import 'package:tutorconnect/presentation/widgets/clases_widget.dart';
-import 'package:tutorconnect/presentation/widgets/perfil_usuario_widget.dart';
+import 'package:tutorconnect/presentation/clases/clases_widget.dart';
+import 'package:tutorconnect/features/usuarios/presentation/widgets/perfil_usuario_widget.dart';
 import 'package:tutorconnect/features/solicitud_estudiante/presentation/widgets/solicitud_tutoria_widget.dart';
 import 'package:tutorconnect/features/tutorias/presentation/widgets/tutorias_widget.dart';
 
@@ -31,8 +32,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
 
+
     if (confirmed == true) {
+      // ⚡ Cerrar sesión
       await ref.read(authProvider.notifier).logout();
+
+      // ⚡ Navegar a login reemplazando la pantalla actual
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
+      }
     }
   }
 

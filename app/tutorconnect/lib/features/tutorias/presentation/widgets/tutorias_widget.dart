@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
 import 'package:tutorconnect/features/materias/application/providers/materia_provider.dart';
-import 'package:tutorconnect/features/materias/data/models/materia_model.dart';
+import 'package:tutorconnect/features/tutoria_estudiante/application/providers/tutorias_estudiantes_provider.dart';
 import 'package:tutorconnect/features/tutorias/application/providers/tutoria_provider.dart';
 import 'package:tutorconnect/features/tutorias/data/models/tutoria_model.dart';
 import 'package:tutorconnect/features/tutorias/presentation/widgets/tutoria_actions.dart';
@@ -19,75 +19,98 @@ class TutoriasWidget extends ConsumerStatefulWidget {
   ConsumerState<TutoriasWidget> createState() => _TutoriasWidgetState();
 }
 
-class _TutoriasWidgetState extends ConsumerState<TutoriasWidget> {
+class _TutoriasWidgetState extends ConsumerState<TutoriasWidget>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  bool _datosCargados = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final currentUser = ref.read(authProvider).user;
+
+    if (currentUser != null && !_datosCargados) {
+      _datosCargados = true;
+      Future.microtask(() async {
+        await ref.read(tutoriaProvider.notifier).getAllTutorias();
+        await ref.read(materiaProvider.notifier).getAllMaterias();
+        await ref.read(usuarioProvider.notifier).getAllUsuarios();
+        if (currentUser.rol == UsuarioRol.estudiante) {
+          await ref.read(tutoriasEstudiantesProvider.notifier).getAllTutoriasEstudiantes();
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final tutoriaState = ref.watch(tutoriaProvider);
     final materiaState = ref.watch(materiaProvider);
     final usuarioState = ref.watch(usuarioProvider);
+    final tutoriaEstudianteState = ref.watch(tutoriasEstudiantesProvider);
     final authState = ref.watch(authProvider);
     final currentUser = authState.user;
 
-    // Logs para depuración
-    // ignore: avoid_print
-    print('DEBUG: Tutorías cargadas: ${tutoriaState.tutorias?.length ?? 0}');
-    // ignore: avoid_print
-    print('DEBUG: Materias cargadas: ${materiaState.materias?.length ?? 0}');
-    // ignore: avoid_print
-    print('DEBUG: Usuarios cargados: ${usuarioState.usuarios?.length ?? 0}');
+    if (currentUser == null) {
+      return const Center(child: Text("No hay usuario logueado"));
+    }
 
-
-    // Obtengo todas las tutorias registradas en Firebase
     final allTutorias = tutoriaState.tutorias ?? [];
 
-    // Filtrar por tutoria de docentes
+    // 🔹 Filtrado según rol
+    List<TutoriaModel> tutoriasFiltradas = [];
+    if (currentUser.rol == UsuarioRol.docente) {
+      tutoriasFiltradas =
+          allTutorias.where((t) => t.profesorId == currentUser.id).toList();
+    } else if (currentUser.rol == UsuarioRol.estudiante) {
+      final tutoriasEstudiantes = tutoriaEstudianteState.tutoriasEstudiantes ?? [];
+      final idsInscrito = tutoriasEstudiantes
+          .where((te) => te.estudianteId == currentUser.id)
+          .map((te) => te.tutoriaId)
+          .toSet();
+      tutoriasFiltradas =
+          allTutorias.where((t) => idsInscrito.contains(t.id)).toList();
+    }
 
-
-    // Filtrar por tutoria de estudiante
-
-
-    // Agrupar tutotorias pro materia ( Debo pasarle todas las tutorias filtradas por docente o estudiante )
     final tutoriasPorMateria = agruparTutoriasPorMateria<TutoriaModel, String>(
-      items: allTutorias,
+      items: tutoriasFiltradas,
       agruparPor: (t) => t.materiaId,
     );
 
-    // ignore: avoid_print
-    print('DEBUG: Tutorías agrupadas por materia: ${tutoriasPorMateria.keys.length}');
-
-
-    tutoriasPorMateria.forEach((materiaId, lista) {
-      // Buscar el nombre de la materia correspondiente
-      final materia = materiaState.materias!.firstWhere(
-      (m) => m.id == materiaId,
-      orElse: () => MateriaModel(id: materiaId, nombre: 'Desconocida'), // placeholder
-    );
-
-      final nombreMateria = materia.nombre;
-      // ignore: avoid_print
-      print('DEBUG: Materia: $nombreMateria, Tutorías: ${lista.length}');
-    });
-
     return Scaffold(
       body: TutoriasStatus(
-        loading: tutoriaState.loading || materiaState.loading || usuarioState.loading,
-        error: tutoriaState.error ?? materiaState.error ?? usuarioState.error,
+        loading: tutoriaState.loading ||
+            materiaState.loading ||
+            usuarioState.loading ||
+            (currentUser.rol == UsuarioRol.estudiante
+                ? tutoriaEstudianteState.loading
+                : false),
+        error: tutoriaState.error ??
+            materiaState.error ??
+            usuarioState.error ??
+            tutoriaEstudianteState.error,
         child: tutoriasPorMateria.isEmpty
             ? const Center(child: Text('No hay tutorías disponibles'))
             : TutoriasLista(
                 tutoriasPorMateria: tutoriasPorMateria,
                 materias: materiaState.materias ?? [],
                 usuarios: usuarioState.usuarios ?? [],
-                onTap: (tutoria) => TutoriaActions.abrirDetalleTutoria(context, ref, tutoria),
+                onTap: (tutoria) =>
+                    TutoriaActions.abrirDetalleTutoria(context, ref, tutoria),
               ),
       ),
-      floatingActionButton: currentUser?.rol == UsuarioRol.docente
-        ? FloatingActionButton(
-            onPressed: () => TutoriaActions.crearNuevaTutoria(context),
-            tooltip: 'Crear nueva tutoría',
-            child: const Icon(Icons.add),
-          ) : null,
+      floatingActionButton: currentUser.rol == UsuarioRol.docente
+          ? FloatingActionButton(
+              onPressed: () => TutoriaActions.crearNuevaTutoria(context),
+              tooltip: 'Crear nueva tutoría',
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }
