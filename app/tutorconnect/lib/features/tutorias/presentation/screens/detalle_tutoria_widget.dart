@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorconnect/features/aulas/data/models/aula_model.dart';
 import 'package:tutorconnect/features/materias/data/models/materia_model.dart';
 import 'package:tutorconnect/features/tutorias/data/models/tutoria_model.dart';
-import 'package:tutorconnect/features/tutorias/presentation/screens/tutoria_detail_info.widget.dart';
+import 'package:tutorconnect/features/tutorias/presentation/screens/tutoria_detail_info_widget.dart';
 import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
 import 'package:tutorconnect/features/aulas/application/providers/aula_provider.dart';
 import 'package:tutorconnect/features/materias/application/providers/materia_provider.dart';

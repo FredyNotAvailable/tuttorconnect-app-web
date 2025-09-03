@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
 import 'package:tutorconnect/features/auth/presentation/screens/boton_restablecer_password.dart';
-import 'package:tutorconnect/features/usuarios/presentation/widgets/info_academica_widget.dart';
+import 'package:tutorconnect/features/usuarios/presentation/widgets/info_academica_card.dart';
 import 'package:tutorconnect/features/usuarios/presentation/widgets/perfil_card.dart';
 import 'package:tutorconnect/features/matriculas/helpers/matricula_helper.dart';
 import 'package:tutorconnect/features/matriculas/application/providers/matricula_provider.dart';

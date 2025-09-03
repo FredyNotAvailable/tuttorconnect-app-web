@@ -47,6 +47,7 @@ class InfoAcademicaCard extends StatelessWidget {
           final malla = getMallaCurricularById(ref, m.mallaId);
           final carrera = getCarreraById(ref, malla.carreraId);
 
+
           return Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             color: theme.colorScheme.surface,
