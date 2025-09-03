@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:tutorconnect/features/auth/presentation/modals/custom_status_modal.dart';
 import 'package:tutorconnect/features/tutorias/data/models/tutoria_model.dart';
 import 'package:tutorconnect/features/aulas/helpers/aula_helper.dart';
 import 'package:tutorconnect/features/tutorias/helper/tutoria_helper.dart';
@@ -66,7 +67,7 @@ class _EditarTutoriaScreenState extends ConsumerState<EditarTutoriaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final aula = getAulaById(ref, widget.tutoria.aulaId);
+    final aulasDisponibles = getAulasDisponibles(ref);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Editar Tutoría')),
@@ -88,10 +89,14 @@ class _EditarTutoriaScreenState extends ConsumerState<EditarTutoriaScreen> {
             const SizedBox(height: 12),
 
             // 🔹 Selector de aula
+            // Dropdown con aulas disponibles
             DropdownButtonFormField<String>(
               value: _aulaSeleccionada,
               decoration: const InputDecoration(labelText: 'Aula'),
-              items: [aula].map((a) => DropdownMenuItem(value: a.id, child: Text('${a.nombre} - ${a.tipo}'))).toList(),
+              items: aulasDisponibles.map((a) => DropdownMenuItem(
+                    value: a.id,
+                    child: Text('${a.nombre} - ${a.tipo}'),
+                  )).toList(),
               onChanged: (val) => setState(() => _aulaSeleccionada = val),
             ),
             const SizedBox(height: 12),
@@ -305,11 +310,52 @@ class _EditarTutoriaScreenState extends ConsumerState<EditarTutoriaScreen> {
                   estado: TutoriaEstado.values.firstWhere((e) => e.name == _estadoSeleccionado),
                 );
 
-                await updateTutoriaHelper(ref, tutoriaActualizada);
-                Navigator.pop(context); // Cerramos la pantalla después de guardar
+                try {
+                  // 🔹 Mostrar modal de carga
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => const CustomStatusModal(
+                      status: StatusModal.loading,
+                      message: 'Actualizando tutoría...',
+                    ),
+                  );
+
+                  // 🔹 Actualizar la tutoría
+                  await updateTutoriaHelper(ref, tutoriaActualizada);
+
+                  // 🔹 Cerrar modal de carga
+                  if (Navigator.canPop(context)) Navigator.pop(context);
+
+                  // 🔹 Modal de éxito
+                  await showDialog(
+                    context: context,
+                    builder: (_) => const CustomStatusModal(
+                      status: StatusModal.success,
+                      message: 'Tutoría actualizada exitosamente',
+                    ),
+                  );
+
+                  // 🔹 Cerrar la pantalla
+                  Navigator.pop(context);
+                  
+                } catch (e) {
+                  // 🔹 Cerrar modal de carga si ocurrió un error
+                  if (Navigator.canPop(context)) Navigator.pop(context);
+
+                  // 🔹 Modal de error
+                  showDialog(
+                    context: context,
+                    builder: (_) => CustomStatusModal(
+                      status: StatusModal.error,
+                      message: 'Error al actualizar tutoría: $e',
+                    ),
+                  );
+                }
               },
               child: const Text('Guardar cambios'),
             )
+
 
           ],
         ),

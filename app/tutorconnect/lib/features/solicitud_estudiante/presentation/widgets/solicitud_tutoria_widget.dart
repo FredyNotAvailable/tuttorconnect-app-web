@@ -18,13 +18,28 @@ class SolicitudesTutoriasWidget extends ConsumerStatefulWidget {
 
 class _SolicitudesTutoriasWidgetState extends ConsumerState<SolicitudesTutoriasWidget> {
   DateTimeRange? filtroFecha;
+  bool loading = true;
+  String? error;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(solicitudesTutoriasProvider.notifier).getAllSolicitudes());
-    Future.microtask(() => ref.read(usuarioProvider.notifier).getAllUsuarios());
-    Future.microtask(() => ref.read(tutoriaProvider.notifier).getAllTutorias());
+    // 🔹 Cargar datos apenas inicia el widget
+    Future.microtask(() async {
+      try {
+        await ref.read(solicitudesTutoriasProvider.notifier).getAllSolicitudes();
+        await ref.read(usuarioProvider.notifier).getAllUsuarios();
+        await ref.read(tutoriaProvider.notifier).getAllTutorias();
+        setState(() {
+          loading = false;
+        });
+      } catch (e) {
+        setState(() {
+          error = e.toString();
+          loading = false;
+        });
+      }
+    });
   }
 
   String formatDate(Timestamp? timestamp) {
@@ -35,12 +50,12 @@ class _SolicitudesTutoriasWidgetState extends ConsumerState<SolicitudesTutoriasW
 
   @override
   Widget build(BuildContext context) {
+    if (loading) return const Center(child: CircularProgressIndicator());
+    if (error != null) return Center(child: Text('Error: $error'));
+
     final state = ref.watch(solicitudesTutoriasProvider);
     final authState = ref.watch(authProvider);
     final currentUser = authState.user;
-
-    if (state.loading) return const Center(child: CircularProgressIndicator());
-    if (state.error != null) return Center(child: Text('Error: ${state.error}'));
 
     // Filtrar solicitudes según permisos
     final solicitudes = (state.solicitudes ?? []).where((solicitud) {

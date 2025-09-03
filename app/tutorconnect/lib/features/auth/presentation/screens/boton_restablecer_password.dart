@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
 import 'package:tutorconnect/features/auth/data/repositories_impl/auth_repository_impl.dart';
+import 'package:tutorconnect/features/auth/presentation/modals/custom_status_modal.dart';
 
 class BotonRestablecerContrasena extends ConsumerWidget {
   final String correo;
@@ -38,18 +39,58 @@ class BotonRestablecerContrasena extends ConsumerWidget {
         if (confirmar != true) return;
 
         try {
+          // 🔹 Mostrar modal de carga
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const CustomStatusModal(
+              status: StatusModal.loading,
+              message: 'Enviando correo...',
+            ),
+          );
+
+          // 🔹 Intentar enviar correo
           await authRepository.sendPasswordResetEmail(correo);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Correo de restablecimiento enviado.')),
+
+          // 🔹 Cerrar modal de carga
+          if (Navigator.canPop(context)) Navigator.pop(context);
+
+          // 🔹 Modal de éxito
+          showDialog(
+            context: context,
+            builder: (_) => const CustomStatusModal(
+              status: StatusModal.success,
+              message: 'Correo de restablecimiento enviado correctamente.',
+            ),
           );
         } on RepositoryException catch (e) {
+          // 🔹 Cerrar modal de carga si hubo error
+          if (Navigator.canPop(context)) Navigator.pop(context);
+
           String mensaje = e.message;
           if (mensaje.contains('requires-recent-login')) {
             mensaje = 'Para restablecer la contraseña, debes iniciar sesión nuevamente.';
           }
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
+
+          // 🔹 Modal de error
+          showDialog(
+            context: context,
+            builder: (_) => CustomStatusModal(
+              status: StatusModal.error,
+              message: mensaje,
+            ),
+          );
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+          // 🔹 Cerrar modal de carga si hubo error
+          if (Navigator.canPop(context)) Navigator.pop(context);
+
+          showDialog(
+            context: context,
+            builder: (_) => CustomStatusModal(
+              status: StatusModal.error,
+              message: 'Error inesperado: $e',
+            ),
+          );
         }
       },
     );

@@ -80,30 +80,32 @@ class CustomStatusModal extends StatelessWidget {
               ),
             ),
 
-            // 3️⃣ Botón
-            Container(
-              width: double.infinity,
-              color: AppColors.surface,
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
+            // 3️⃣ Botón solo si NO está cargando
+            if (status != StatusModal.loading)
+              Container(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getStatusColor(status),
-                    foregroundColor: AppColors.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                color: AppColors.surface,
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _getStatusColor(status),
+                      foregroundColor: AppColors.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    "Aceptar",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    child: const Text(
+                      "Aceptar",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ),
-            ),
+
           ],
         ),
       ),

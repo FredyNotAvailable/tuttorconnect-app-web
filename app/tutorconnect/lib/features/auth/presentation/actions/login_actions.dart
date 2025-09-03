@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tutorconnect/core/routes/app_routes.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
 import 'package:tutorconnect/features/auth/presentation/actions/domain_validator.dart';
 import 'package:tutorconnect/features/auth/presentation/modals/custom_status_modal.dart';
@@ -65,17 +66,18 @@ Future<void> iniciarSesion( BuildContext context, WidgetRef ref, String email, S
   // Leer estado actualizado
   final updatedState = ref.read(authProvider);
   Navigator.of(context).pop(); // Cerrar modal de carga
+  Navigator.pushReplacementNamed(context, AppRoutes.home);
 
   // Mostrar modal de éxito o error
   if (updatedState.error == null && updatedState.user != null) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) => const CustomStatusModal(
-        status: StatusModal.success,
-        message: '¡Has iniciado sesión correctamente!',
-      ),
-    );
+    // showDialog(
+    //   context: context,
+    //   barrierDismissible: true,
+    //   builder: (_) => const CustomStatusModal(
+    //     status: StatusModal.success,
+    //     message: '¡Has iniciado sesión correctamente!',
+    //   ),
+    // );
   } else {
     showDialog(
       context: context,

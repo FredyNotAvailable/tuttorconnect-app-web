@@ -8,7 +8,9 @@ import 'package:tutorconnect/features/horarios_clases/application/providers/hora
 import 'package:tutorconnect/features/materias/application/providers/materia_provider.dart';
 import 'package:tutorconnect/features/materias/data/models/materia_model.dart';
 import 'package:tutorconnect/features/tutoria_estudiante/application/providers/tutorias_estudiantes_provider.dart';
+import 'package:tutorconnect/features/tutoria_estudiante/data/models/tutoria_estudiante_model.dart';
 import 'package:tutorconnect/features/tutoria_estudiante/helper/tutoria_estudiante_helper.dart';
+import 'package:tutorconnect/features/tutorias/application/providers/tutoria_provider.dart';
 import 'package:tutorconnect/features/tutorias/data/models/tutoria_model.dart';
 import 'package:tutorconnect/features/tutorias/helper/tutoria_helper.dart';
 import 'package:tutorconnect/features/usuarios/application/providers/usuario_provider.dart';
@@ -25,21 +27,68 @@ class ClaseDetalleScreen extends ConsumerStatefulWidget {
 }
 
 class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
+  bool loading = true;
+  String? error;
+
+  List<TutoriaModel> tutoriasFiltradas = [];
+  List<HorarioClaseModel> horarios = [];
+  List<UsuarioModel> estudiantes = [];
+
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _cargarDatos();
-    });
+    Future.microtask(_cargarDatos);
   }
 
-  void _cargarDatos() {
-    ref.read(aulaProvider.notifier).getAllAulas();
-    ref.read(horariosClasesProvider.notifier).getAllHorarios();
-    ref.read(materiaProvider.notifier).getAllMaterias();
-    ref.read(tutoriasEstudiantesProvider.notifier).getAllTutoriasEstudiantes();
-    ref.read(usuarioProvider.notifier).getAllUsuarios();
+  /// Filtra todas las tutorías estudiante por materia
+  List<TutoriaEstudianteModel> _getAllTutoriasEstudiantesByMateria(String materiaId) {
+    final allTutoriasEstudiantes =
+        ref.read(tutoriasEstudiantesProvider).tutoriasEstudiantes ?? [];
+    final allTutorias = ref.read(tutoriaProvider).tutorias ?? [];
+
+    final tutoriaIdsMateria =
+        allTutorias.where((t) => t.materiaId == materiaId).map((t) => t.id).toSet();
+
+    return allTutoriasEstudiantes
+        .where((te) => tutoriaIdsMateria.contains(te.tutoriaId))
+        .toList();
+  }
+
+  Future<void> _cargarDatos() async {
+    try {
+      await ref.read(aulaProvider.notifier).getAllAulas();
+      await ref.read(horariosClasesProvider.notifier).getAllHorarios();
+      await ref.read(materiaProvider.notifier).getAllMaterias();
+      await ref.read(tutoriasEstudiantesProvider.notifier).getAllTutoriasEstudiantes();
+      await ref.read(usuarioProvider.notifier).getAllUsuarios();
+      await ref.read(tutoriaProvider.notifier).getAllTutorias();
+
+      final authState = ref.read(authProvider);
+      final currentUser = authState.user;
+
+      final allTutorias = getAllTutoriasByMateriaId(ref, widget.materia.id);
+      final allTutoriasEstudiantes = _getAllTutoriasEstudiantesByMateria(widget.materia.id);
+
+      if (currentUser?.rol == UsuarioRol.docente) {
+        tutoriasFiltradas = allTutorias.where((t) => t.profesorId == currentUser!.id).toList();
+      } else if (currentUser?.rol == UsuarioRol.estudiante) {
+        final tutoriaIds = allTutoriasEstudiantes
+            .where((te) => te.estudianteId == currentUser!.id)
+            .map((te) => te.tutoriaId)
+            .toSet();
+        tutoriasFiltradas = allTutorias.where((t) => tutoriaIds.contains(t.id)).toList();
+      }
+
+      horarios = getHorariosByMateria(ref, widget.materia.id);
+      estudiantes = getAllEstudiantesByMateria(ref, widget.materia.id);
+
+      setState(() => loading = false);
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        loading = false;
+      });
+    }
   }
 
   @override
@@ -47,19 +96,18 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
     final authState = ref.watch(authProvider);
     final currentUser = authState.user;
 
-    final List<HorarioClaseModel> horarios = getHorariosByMateria(ref, widget.materia.id);
-    final List<TutoriaModel> tutorias = getAllTutoriasByMateriaId(ref, widget.materia.id);
-    final List<UsuarioModel> estudiantes = getAllEstudiantesByMateria(ref, widget.materia.id);
+    final isDocente = currentUser?.rol == UsuarioRol.docente;
+    final isEstudiante = currentUser?.rol == UsuarioRol.estudiante;
 
-    final bool isDocente = currentUser?.rol == UsuarioRol.docente;
-    final bool isEstudiante = currentUser?.rol == UsuarioRol.estudiante;
+    if (loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (error != null) return Scaffold(body: Center(child: Text('Error: $error')));
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.materia.nombre)),
       body: ClaseDetalleInfoWidget(
         materia: widget.materia,
         horarios: horarios,
-        tutorias: tutorias,
+        tutorias: tutoriasFiltradas,
         estudiantes: estudiantes,
         isDocente: isDocente,
         isEstudiante: isEstudiante,
@@ -67,3 +115,4 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
     );
   }
 }
+

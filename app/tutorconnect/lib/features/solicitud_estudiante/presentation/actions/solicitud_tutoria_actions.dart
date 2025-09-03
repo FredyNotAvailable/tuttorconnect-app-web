@@ -6,7 +6,6 @@ import 'package:tutorconnect/features/solicitud_estudiante/helpers/solicitud_tut
 import 'package:tutorconnect/features/tutoria_estudiante/data/datasources/tutorias_estudiantes_datasource.dart';
 import 'package:tutorconnect/features/tutoria_estudiante/data/models/tutoria_estudiante_model.dart';
 import 'package:tutorconnect/features/tutoria_estudiante/data/repositories_impl/tutorias_estudiantes_repository_impl.dart';
-import 'package:tutorconnect/features/tutoria_estudiante/helper/tutoria_estudiante_helper.dart';
 
 class SolicitudTutoriaActions {
   /// Muestra un diálogo de confirmación antes de ejecutar la acción
@@ -60,7 +59,6 @@ class SolicitudTutoriaActions {
       
     await updateSolicitudHelper(ref, updated);
     await repository.createTutoriaEstudiante(nuevaRelacion);
-    // await asignarEstudianteATutoria(ref, solicitud.tutoriaId, solicitud.estudianteId);
   }
 
   /// Rechaza una solicitud de tutoría

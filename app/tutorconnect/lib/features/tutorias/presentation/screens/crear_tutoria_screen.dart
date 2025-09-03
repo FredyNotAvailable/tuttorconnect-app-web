@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:tutorconnect/core/routes/app_routes.dart';
 import 'package:tutorconnect/features/aulas/helpers/aula_helper.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
+import 'package:tutorconnect/features/auth/presentation/modals/custom_status_modal.dart';
 import 'package:tutorconnect/features/materias/helpers/materia_helper.dart';
 import 'package:tutorconnect/features/profesores_materias/application/providers/profesor_materia_provider.dart';
 import 'package:tutorconnect/features/profesores_materias/data/models/profesor_materia_model.dart';
@@ -361,8 +362,6 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                 const SizedBox(height: 12),
               ],
 
-
-
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20.0), // espacio hacia abajo
@@ -383,42 +382,82 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                           );
                           return;
                         }
-
-                        // 1️⃣ Crear la tutoría
-                        final nuevaTutoria = TutoriaModel(
-                          id: '', 
-                          tema: _temaController.text,
-                          descripcion: _descripcionController.text,
-                          profesorId: currentUser!.id,
-                          materiaId: _materiaSeleccionada!.id,
-                          aulaId: _aulaSeleccionada!.id,
-                          fecha: Timestamp.fromDate(_fecha!),
-                          horaInicio: _horaInicioController.text,
-                          horaFin: _horaFinController.text,
-                          estado: TutoriaEstado.pendiente,
-                        );
-
-                        final newTutoria = await createTutoriaHelper(ref, nuevaTutoria);
-
-                        // 2️⃣ Crear solicitudes para cada estudiante
-                        for (final estudiante in _estudiantesSeleccionados) {
-                          final solicitud = SolicitudTutoriaModel(
-                            id: '',
-                            tutoriaId: newTutoria.id,
-                            estudianteId: estudiante.id,
-                            fechaEnvio: Timestamp.now(),
-                            fechaRespuesta: null,
-                            estado: EstadoSolicitud.pendiente,
+                        try {
+                          // 🔹 Mostrar modal de carga
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false, // No se puede cerrar mientras carga
+                            builder: (_) => const CustomStatusModal(
+                              status: StatusModal.loading,
+                              message: 'Creando tutoría...',
+                            ),
                           );
 
-                          await createSolicitudHelper(ref, solicitud);
+                          // 1️⃣ Crear la tutoría
+                          final nuevaTutoria = TutoriaModel(
+                            id: '', 
+                            tema: _temaController.text,
+                            descripcion: _descripcionController.text,
+                            profesorId: currentUser!.id,
+                            materiaId: _materiaSeleccionada!.id,
+                            aulaId: _aulaSeleccionada!.id,
+                            fecha: Timestamp.fromDate(_fecha!),
+                            horaInicio: _horaInicioController.text,
+                            horaFin: _horaFinController.text,
+                            estado: TutoriaEstado.pendiente,
+                          );
+
+                          final newTutoria = await createTutoriaHelper(ref, nuevaTutoria);
+
+                          // 2️⃣ Crear solicitudes para cada estudiante
+                          for (final estudiante in _estudiantesSeleccionados) {
+                            final solicitud = SolicitudTutoriaModel(
+                              id: '',
+                              tutoriaId: newTutoria.id,
+                              estudianteId: estudiante.id,
+                              fechaEnvio: Timestamp.now(),
+                              fechaRespuesta: null,
+                              estado: EstadoSolicitud.pendiente,
+                            );
+
+                            await createSolicitudHelper(ref, solicitud);
+                          }
+
+                          // 🔹 Cerrar modal de carga
+                          if (Navigator.canPop(context)) Navigator.pop(context);
+
+                          // 🔹 Mostrar modal de éxito
+                          await showDialog(
+                            context: context,
+                            barrierDismissible: true, // Permitir cerrar después
+                            builder: (_) => const CustomStatusModal(
+                              status: StatusModal.success,
+                              message: 'Tutoría creada exitosamente',
+                            ),
+                          );
+
+                          // 🔹 Redirigir a Home
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            AppRoutes.home,
+                            (route) => false,
+                          );
+
+                        } catch (e) {
+                          // 🔹 Cerrar modal de carga si ocurrió un error
+                          if (Navigator.canPop(context)) Navigator.pop(context);
+
+                          // 🔹 Mostrar modal de error
+                          showDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (_) => CustomStatusModal(
+                              status: StatusModal.error,
+                              message: 'Error al crear tutoría: $e',
+                            ),
+                          );
                         }
 
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          AppRoutes.home,
-                          (route) => false,
-                        );
                       },
                       child: const Text(
                         'Crear Tutoría',

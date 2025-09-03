@@ -3,119 +3,75 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
 import 'package:tutorconnect/features/auth/presentation/screens/boton_restablecer_password.dart';
 import 'package:tutorconnect/features/usuarios/presentation/widgets/info_academica_widget.dart';
+import 'package:tutorconnect/features/usuarios/presentation/widgets/perfil_card.dart';
+import 'package:tutorconnect/features/matriculas/helpers/matricula_helper.dart';
+import 'package:tutorconnect/features/matriculas/application/providers/matricula_provider.dart';
+import 'package:tutorconnect/features/carreras/application/providers/carrera_provider.dart';
+import 'package:tutorconnect/features/mallas_curriculares/application/providers/malla_curricular_provider.dart';
+import 'package:tutorconnect/features/materias_malla/application/providers/materia_malla_provider.dart';
 
-class PerfilUsuarioWidget extends ConsumerWidget {
+class PerfilUsuarioWidget extends ConsumerStatefulWidget {
   final UsuarioModel usuario;
 
   const PerfilUsuarioWidget({super.key, required this.usuario});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PerfilUsuarioWidget> createState() => _PerfilUsuarioWidgetState();
+}
+
+class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
+  List matriculas = [];
+  bool loading = true;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    // 🔹 Cargar toda la info académica aquí
+    Future.microtask(() async {
+      try {
+        await ref.read(matriculaProvider.notifier).getAllMatriculas();
+        await ref.read(carreraProvider.notifier).getAllCarreras();
+        await ref.read(mallaCurricularProvider.notifier).getAllMallas();
+        await ref.read(materiaMallaProvider.notifier).getAllMateriasMalla();
+
+        final m = getAllMatriculasByEstudiante(ref, widget.usuario.id);
+        setState(() {
+          matriculas = m;
+          loading = false;
+        });
+      } catch (e) {
+        setState(() {
+          error = e.toString();
+          loading = false;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          AvatarUsuario(usuario: usuario),
+          PerfilCard(usuario: widget.usuario),
+
+          if (widget.usuario.rol == UsuarioRol.estudiante)
+            InfoAcademicaCard(
+              matriculas: matriculas,
+              loading: loading,
+              error: error,
+              ref: ref,
+            ),
+
           const SizedBox(height: 16),
-          NombreUsuario(usuario: usuario),
-          const SizedBox(height: 8),
-          CorreoUsuario(usuario: usuario),
-          const SizedBox(height: 4),
-          RolUsuario(usuario: usuario),
-          const SizedBox(height: 16),
-          if (usuario.rol == UsuarioRol.estudiante)
-            InfoAcademicaWidget(estudianteId: usuario.id),
-          const SizedBox(height: 16),
-          BotonRestablecerContrasena(correo: usuario.correo),
+          BotonRestablecerContrasena(correo: widget.usuario.correo),
           const SizedBox(height: 24),
         ],
       ),
-    );
-  }
-}
-
-// ===========================
-// Subcomponentes
-// ===========================
-class AvatarUsuario extends StatelessWidget {
-  final UsuarioModel usuario;
-
-  const AvatarUsuario({super.key, required this.usuario});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return CircleAvatar(
-      radius: 40,
-      backgroundColor: theme.colorScheme.primary,
-      child: Text(
-        usuario.nombreCompleto.isNotEmpty
-            ? usuario.nombreCompleto[0].toUpperCase()
-            : '?',
-        style: theme.textTheme.displayMedium?.copyWith(
-          color: theme.colorScheme.onPrimary,
-          fontWeight: FontWeight.bold,
-          fontSize: 32,
-        ),
-      ),
-    );
-  }
-}
-
-class NombreUsuario extends StatelessWidget {
-  final UsuarioModel usuario;
-
-  const NombreUsuario({super.key, required this.usuario});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Text(
-      usuario.nombreCompleto,
-      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-    );
-  }
-}
-
-class CorreoUsuario extends StatelessWidget {
-  final UsuarioModel usuario;
-
-  const CorreoUsuario({super.key, required this.usuario});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Icon(Icons.email, size: 16, color: theme.colorScheme.onSurface),
-        const SizedBox(width: 4),
-        Text(usuario.correo, style: theme.textTheme.bodyMedium),
-      ],
-    );
-  }
-}
-
-class RolUsuario extends StatelessWidget {
-  final UsuarioModel usuario;
-
-  const RolUsuario({super.key, required this.usuario});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Icon(Icons.person, size: 16, color: theme.colorScheme.onSurface),
-        const SizedBox(width: 4),
-        Text(usuario.rolNombre, style: theme.textTheme.bodyMedium),
-      ],
     );
   }
 }

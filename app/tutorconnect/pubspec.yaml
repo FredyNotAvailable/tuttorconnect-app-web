@@ -11,14 +11,26 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Localizations
+  flutter_localizations:
+    sdk: flutter
+
   # Cupertino Icons
   cupertino_icons: ^1.0.8
+
+  # Firebase
   firebase_core: ^4.0.0
   cloud_firestore: ^6.0.0
   firebase_auth: ^6.0.1
+
+  # State management
   provider: ^6.1.5+1
   flutter_riverpod: ^2.6.1
+
+  # Internacionalización y formatos
   intl: ^0.20.2
+
+  # Splash screen
   flutter_native_splash: ^2.4.6
 
 dev_dependencies:
@@ -37,10 +49,8 @@ flutter:
 
 # 🔹 Configuración del splash screen
 flutter_native_splash:
-  color: "#910048" # (opcional) color de fondo
-  image: assets/images/app_icon.png # Imagen centrada (tipo logo)
-  # background_image: assets/images/app_icon.png # Imagen de fondo que ocupa toda la pantalla910048
-  # background_image: assets/images/app_banner.png # Imagen de fondo que ocupa toda la pantalla910048
+  color: "#910048" # color de fondo
+  image: assets/images/app_icon.png # Imagen centrada (logo)
   android: true
   ios: true
   web: false

@@ -24,27 +24,36 @@ class ClasesWidget extends ConsumerStatefulWidget {
 }
 
 class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
+  bool loading = true;
+  String? error;
+
   @override
   void initState() {
     super.initState();
-    // ⚡ Cargar datos después del primer frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _cargarDatos();
+    // 🔹 Cargar todos los datos apenas inicia el widget
+    Future.microtask(() async {
+      try {
+        await ref.read(usuarioProvider.notifier).getAllUsuarios();
+        await ref.read(matriculaProvider.notifier).getAllMatriculas();
+        await ref.read(mallaCurricularProvider.notifier).getAllMallas();
+        await ref.read(materiaMallaProvider.notifier).getAllMateriasMalla();
+        await ref.read(materiaProvider.notifier).getAllMaterias();
+        await ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias();
+        setState(() => loading = false);
+      } catch (e) {
+        setState(() {
+          error = e.toString();
+          loading = false;
+        });
+      }
     });
-  }
-
-  void _cargarDatos() {
-    // Llamadas directas a los providers
-    ref.read(usuarioProvider.notifier).getAllUsuarios();
-    ref.read(matriculaProvider.notifier).getAllMatriculas();
-    ref.read(mallaCurricularProvider.notifier).getAllMallas();
-    ref.read(materiaMallaProvider.notifier).getAllMateriasMalla();
-    ref.read(materiaProvider.notifier).getAllMaterias();
-    ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (loading) return const Center(child: CircularProgressIndicator());
+    if (error != null) return Center(child: Text('Error: $error'));
+
     List<MateriaModel> materias = [];
 
     if (widget.usuario.rol == UsuarioRol.estudiante) {
