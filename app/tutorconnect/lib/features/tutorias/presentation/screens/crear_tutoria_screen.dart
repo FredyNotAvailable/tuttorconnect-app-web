@@ -52,7 +52,10 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
   void initState() {
     super.initState();
     // Cargar relaciones profesor-materia
-    Future.microtask(() => ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias());
+    Future.microtask(
+      () =>
+          ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias(),
+    );
   }
 
   @override
@@ -94,7 +97,10 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                   setState(() {
                     _materiaSeleccionada = value;
                     if (value != null) {
-                      _estudiantesSeleccionados = getAllEstudiantesByMateria(ref, value.id);
+                      _estudiantesSeleccionados = getAllEstudiantesByMateria(
+                        ref,
+                        value.id,
+                      );
                     } else {
                       _estudiantesSeleccionados = [];
                     }
@@ -160,9 +166,14 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                     final now = DateTime.now();
 
                     // Validar que no sea fin de semana (sábado=6, domingo=7)
-                    if (picked.weekday == DateTime.saturday || picked.weekday == DateTime.sunday) {
+                    if (picked.weekday == DateTime.saturday ||
+                        picked.weekday == DateTime.sunday) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Las tutorías solo están disponibles de lunes a viernes')),
+                        const SnackBar(
+                          content: Text(
+                            'Las tutorías solo están disponibles de lunes a viernes',
+                          ),
+                        ),
                       );
                       return;
                     }
@@ -173,7 +184,11 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                         picked.day == now.day) {
                       if (now.hour >= 22) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('No puedes agendar tutorías después de las 22:00 de hoy')),
+                          const SnackBar(
+                            content: Text(
+                              'No puedes agendar tutorías después de las 22:00 de hoy',
+                            ),
+                          ),
                         );
                         return;
                       }
@@ -182,7 +197,9 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                     // Si pasa todas las validaciones, se asigna
                     setState(() {
                       _fecha = picked;
-                      _fechaController.text = DateFormat('dd/MM/yyyy').format(_fecha!);
+                      _fechaController.text = DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(_fecha!);
                     });
                   }
                 },
@@ -198,9 +215,6 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-
-
-
 
               // Hora inicio y fin
               Row(
@@ -219,10 +233,15 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
 
                           // Validar rango permitido
                           if (picked.hour < horaMin.hour ||
-                              (picked.hour == horaMax.hour && picked.minute > 0) ||
+                              (picked.hour == horaMax.hour &&
+                                  picked.minute > 0) ||
                               picked.hour > horaMax.hour) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('La hora debe estar entre 07:00 y 22:00')),
+                              const SnackBar(
+                                content: Text(
+                                  'La hora debe estar entre 07:00 y 22:00',
+                                ),
+                              ),
                             );
                             return;
                           }
@@ -230,7 +249,8 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                           setState(() {
                             _horaInicioController.text =
                                 '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-                            _horaFinController.clear(); // Limpiar hora fin si ya estaba
+                            _horaFinController
+                                .clear(); // Limpiar hora fin si ya estaba
                           });
                         }
                       },
@@ -255,7 +275,11 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                         // Validar que ya exista hora inicio
                         if (_horaInicioController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Primero selecciona la hora de inicio')),
+                            const SnackBar(
+                              content: Text(
+                                'Primero selecciona la hora de inicio',
+                              ),
+                            ),
                           );
                           return;
                         }
@@ -270,33 +294,49 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
 
                           // Validar rango permitido
                           if (picked.hour < horaMin.hour ||
-                              (picked.hour == horaMax.hour && picked.minute > 0) ||
+                              (picked.hour == horaMax.hour &&
+                                  picked.minute > 0) ||
                               picked.hour > horaMax.hour) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('La hora debe estar entre 07:00 y 22:00')),
+                              const SnackBar(
+                                content: Text(
+                                  'La hora debe estar entre 07:00 y 22:00',
+                                ),
+                              ),
                             );
                             return;
                           }
 
                           // Validar que sea mayor a hora inicio con mínimo 30 min
-                          final inicioParts = _horaInicioController.text.split(':');
+                          final inicioParts = _horaInicioController.text.split(
+                            ':',
+                          );
                           final inicio = TimeOfDay(
                             hour: int.parse(inicioParts[0]),
                             minute: int.parse(inicioParts[1]),
                           );
 
-                          final inicioMinutos = inicio.hour * 60 + inicio.minute;
+                          final inicioMinutos =
+                              inicio.hour * 60 + inicio.minute;
                           final finMinutos = picked.hour * 60 + picked.minute;
 
                           if (finMinutos - inicioMinutos < 30) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('La hora de fin debe ser al menos 30 minutos mayor que la de inicio')),
+                              const SnackBar(
+                                content: Text(
+                                  'La hora de fin debe ser al menos 30 minutos mayor que la de inicio',
+                                ),
+                              ),
                             );
                             return;
                           }
                           if (finMinutos - inicioMinutos > 180) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('La duración de la tutoría no puede ser mayor a 3 horas')),
+                              const SnackBar(
+                                content: Text(
+                                  'La duración de la tutoría no puede ser mayor a 3 horas',
+                                ),
+                              ),
                             );
                             return;
                           }
@@ -322,7 +362,6 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                 ],
               ),
 
-
               // 🔹 Lista de estudiantes de la materia seleccionada
               if (_estudiantesSeleccionados.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -333,52 +372,66 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                 const SizedBox(height: 8),
 
                 // 🔹 Debug: imprimir en consola
-                Builder(builder: (_) {
-                  debugPrint('Lista de estudiantes seleccionados:');
-                  for (var e in _estudiantesSeleccionados) {
-                    debugPrint(' - ${e.nombreCompleto} (ID: ${e.id})');
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _estudiantesSeleccionados.map((e) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: Opacity(
-                          opacity: 0.6, // semi-opaco
-                          child: Chip(
-                            label: Text(
-                              e.nombreCompleto,
-                              style: const TextStyle(color: Colors.black87),
+                Builder(
+                  builder: (_) {
+                    debugPrint('Lista de estudiantes seleccionados:');
+                    for (var e in _estudiantesSeleccionados) {
+                      debugPrint(' - ${e.nombreCompleto} (ID: ${e.id})');
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _estudiantesSeleccionados.map((e) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Opacity(
+                            opacity: 0.6, // semi-opaco
+                            child: Chip(
+                              label: Text(
+                                e.nombreCompleto,
+                                style: const TextStyle(color: Colors.black87),
+                              ),
+                              backgroundColor:
+                                  Colors.grey[300], // color más claro
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
-                            backgroundColor: Colors.grey[300], // color más claro
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  );
-                }),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
 
                 const SizedBox(height: 12),
               ],
 
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0), // espacio hacia abajo
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20.0,
+                  ), // espacio hacia abajo
                   child: SizedBox(
                     width: double.infinity, // botón ancho completo
                     height: 55, // altura más grande
                     child: ElevatedButton(
-                      style: Theme.of(context).elevatedButtonTheme.style, // usa el tema
+                      style: Theme.of(
+                        context,
+                      ).elevatedButtonTheme.style, // usa el tema
                       onPressed: () async {
-                        if (_temaController.text.isEmpty || 
-                            _materiaSeleccionada == null || 
-                            _aulaSeleccionada == null || 
-                            _fecha == null || 
-                            _horaInicioController.text.isEmpty || 
+                        if (_temaController.text.isEmpty ||
+                            _materiaSeleccionada == null ||
+                            _aulaSeleccionada == null ||
+                            _fecha == null ||
+                            _horaInicioController.text.isEmpty ||
                             _horaFinController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Por favor complete todos los campos')),
+                            const SnackBar(
+                              content: Text(
+                                'Por favor complete todos los campos',
+                              ),
+                            ),
                           );
                           return;
                         }
@@ -386,7 +439,8 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                           // 🔹 Mostrar modal de carga
                           showDialog(
                             context: context,
-                            barrierDismissible: false, // No se puede cerrar mientras carga
+                            barrierDismissible:
+                                false, // No se puede cerrar mientras carga
                             builder: (_) => const CustomStatusModal(
                               status: StatusModal.loading,
                               message: 'Creando tutoría...',
@@ -395,7 +449,7 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
 
                           // 1️⃣ Crear la tutoría
                           final nuevaTutoria = TutoriaModel(
-                            id: '', 
+                            id: '',
                             tema: _temaController.text,
                             descripcion: _descripcionController.text,
                             profesorId: currentUser!.id,
@@ -407,7 +461,10 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                             estado: TutoriaEstado.pendiente,
                           );
 
-                          final newTutoria = await createTutoriaHelper(ref, nuevaTutoria);
+                          final newTutoria = await createTutoriaHelper(
+                            ref,
+                            nuevaTutoria,
+                          );
 
                           // 2️⃣ Crear solicitudes para cada estudiante
                           for (final estudiante in _estudiantesSeleccionados) {
@@ -442,7 +499,6 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                             AppRoutes.home,
                             (route) => false,
                           );
-
                         } catch (e) {
                           // 🔹 Cerrar modal de carga si ocurrió un error
                           if (Navigator.canPop(context)) Navigator.pop(context);
@@ -457,7 +513,6 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                             ),
                           );
                         }
-
                       },
                       child: const Text(
                         'Crear Tutoría',
@@ -466,8 +521,7 @@ class _CrearTutoriaScreenState extends ConsumerState<CrearTutoriaScreen> {
                     ),
                   ),
                 ),
-              )
-
+              ),
             ],
           ),
         ),

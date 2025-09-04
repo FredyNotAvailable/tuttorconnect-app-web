@@ -9,6 +9,8 @@ import 'package:tutorconnect/features/matriculas/application/providers/matricula
 import 'package:tutorconnect/features/carreras/application/providers/carrera_provider.dart';
 import 'package:tutorconnect/features/mallas_curriculares/application/providers/malla_curricular_provider.dart';
 import 'package:tutorconnect/features/materias_malla/application/providers/materia_malla_provider.dart';
+import 'package:tutorconnect/core/themes/app_colors.dart';
+import 'package:tutorconnect/core/themes/app_text_styles.dart';
 
 class PerfilUsuarioWidget extends ConsumerStatefulWidget {
   final UsuarioModel usuario;
@@ -16,7 +18,8 @@ class PerfilUsuarioWidget extends ConsumerStatefulWidget {
   const PerfilUsuarioWidget({super.key, required this.usuario});
 
   @override
-  ConsumerState<PerfilUsuarioWidget> createState() => _PerfilUsuarioWidgetState();
+  ConsumerState<PerfilUsuarioWidget> createState() =>
+      _PerfilUsuarioWidgetState();
 }
 
 class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
@@ -27,7 +30,6 @@ class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
   @override
   void initState() {
     super.initState();
-    // 🔹 Cargar toda la info académica aquí
     Future.microtask(() async {
       try {
         await ref.read(matriculaProvider.notifier).getAllMatriculas();
@@ -51,24 +53,70 @@ class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
 
   @override
   Widget build(BuildContext context) {
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          PerfilCard(usuario: widget.usuario),
-
-          if (widget.usuario.rol == UsuarioRol.estudiante)
-            InfoAcademicaCard(
-              matriculas: matriculas,
-              loading: loading,
-              error: error,
-              ref: ref,
+          // 🔹 Perfil del usuario con estilo moderno
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
             ),
+            child: PerfilCard(usuario: widget.usuario),
+          ),
 
           const SizedBox(height: 16),
-          BotonRestablecerContrasena(correo: widget.usuario.correo),
+
+          // 🔹 Información académica (solo estudiantes)
+          if (widget.usuario.rol == UsuarioRol.estudiante)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: InfoAcademicaCard(
+                matriculas: matriculas,
+                loading: loading,
+                error: error,
+                ref: ref,
+              ),
+            ),
+
+          const SizedBox(height: 24),
+
+          // 🔹 Botón de restablecer contraseña con estilo consistente
+          ElevatedButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    BotonRestablecerContrasena(correo: widget.usuario.correo),
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(172, 189, 2, 95),
+              foregroundColor: AppColors.onPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              textStyle: AppTextStyles.button.copyWith(fontSize: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+            ),
+            child: const Text("Restablecer Contraseña"),
+          ),
+
           const SizedBox(height: 24),
         ],
       ),

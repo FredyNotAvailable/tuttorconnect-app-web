@@ -36,79 +36,170 @@ class ClaseDetalleInfoWidget extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(materia.nombre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 8),
+          // 🔹 Materia
+          Text(
+            materia.nombre,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 20),
 
           // 🔹 Horarios
-          if (horarios.isEmpty)
-            const Text('No hay horarios asignados.')
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: horarios.map((horario) {
-                final aula = getAulaById(ref, horario.aulaId);
-                final profesor = getUsuarioById(ref, horario.profesorId);
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Día: ${horario.diaSemana.name.toUpperCase()}',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                      Text('Hora: ${horario.horaInicio} - ${horario.horaFin}',
-                          style: const TextStyle(fontSize: 14)),
-                      Text('Aula: ${aula.nombre} - ${aula.tipo}', style: const TextStyle(fontSize: 14)),
-                      if (isEstudiante)
-                        Text('Profesor: ${profesor.nombreCompleto}', style: const TextStyle(fontSize: 14)),
-                      const Divider(),
-                    ],
-                  ),
-                );
-              }).toList(),
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
+            elevation: 3,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: horarios.isEmpty
+                  ? Text(
+                      'No hay horarios asignados.',
+                      style: TextStyle(color: Theme.of(context).hintColor),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Horarios',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const Divider(),
+                        ...horarios.map((horario) {
+                          final aula = getAulaById(ref, horario.aulaId);
+                          final profesor = getUsuarioById(
+                            ref,
+                            horario.profesorId,
+                          );
 
-          const SizedBox(height: 16),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '📅 ${horario.diaSemana.name.toUpperCase()}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '🕒 ${horario.horaInicio} - ${horario.horaFin}',
+                                ),
+                                Text('🏫 Aula: ${aula.nombre} - ${aula.tipo}'),
+                                if (isEstudiante)
+                                  Text(
+                                    '👨‍🏫 Profesor: ${profesor.nombreCompleto}',
+                                  ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(height: 20),
 
           // 🔹 Estudiantes (solo si es docente)
-          if (isDocente) ...[
-            const Text('Estudiantes inscritos:', style: TextStyle(fontWeight: FontWeight.bold)),
-            if (estudiantes.isEmpty)
-              const Text('No hay estudiantes inscritos.')
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: estudiantes
-                    .map((e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text(e.nombreCompleto, style: const TextStyle(fontSize: 14)),
-                        ))
-                    .toList(),
+          if (isDocente)
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            const SizedBox(height: 16),
-          ],
+              elevation: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: estudiantes.isEmpty
+                    ? Text(
+                        'No hay estudiantes inscritos.',
+                        style: TextStyle(color: Theme.of(context).hintColor),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Estudiantes inscritos',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const Divider(),
+                          ...estudiantes.map(
+                            (e) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.person, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(e.nombreCompleto),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          if (isDocente) const SizedBox(height: 20),
 
-        if (tutorias.isEmpty)
-          const Text('No hay tutorías asignadas.')
-        else
-          Column(
-            children: tutorias.map((tutoria) {
-              final docente = getUsuarioById(ref, tutoria.profesorId);
-              final materia = getMateriaById(ref, tutoria.materiaId); // si quieres mostrar info de la materia
-              return TutoriaCard(
-                tutoria: tutoria,
-                docente: docente,
-                materia: materia,
-                formatDate: (timestamp) => timestamp != null ? DateFormat('dd/MM/yyyy').format(timestamp.toDate()) : '',
-                onTap: () => Navigator.pushNamed(
-                  context,
-                  AppRoutes.detalleTutoria,
-                  arguments: tutoria,
-                ),
-              );
-            }).toList(),
+          // 🔹 Tutorías
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 3,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: tutorias.isEmpty
+                  ? Text(
+                      'No hay tutorías asignadas.',
+                      style: TextStyle(color: Theme.of(context).hintColor),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tutorías',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const Divider(),
+                        ...tutorias.map((tutoria) {
+                          final docente = getUsuarioById(
+                            ref,
+                            tutoria.profesorId,
+                          );
+                          final materia = getMateriaById(
+                            ref,
+                            tutoria.materiaId,
+                          );
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: TutoriaCard(
+                              tutoria: tutoria,
+                              docente: docente,
+                              materia: materia,
+                              formatDate: (timestamp) => timestamp != null
+                                  ? DateFormat(
+                                      'dd/MM/yyyy',
+                                    ).format(timestamp.toDate())
+                                  : '',
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.detalleTutoria,
+                                arguments: tutoria,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+            ),
           ),
-
         ],
       ),
     );

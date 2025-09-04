@@ -11,4 +11,10 @@ class AppColors {
   static const success = Color(0xFF34c85a);
   static const error = Color(0xFFb00020);
   static const warning = Color(0xFFfd9726);
+
+  // 🔹 Colores adicionales para UI
+  static const grey = Color(0xFF9E9E9E); // íconos o textos no seleccionados
+  static const darkGrey = Color(0xFF616161); // texto secundario
+  static const lightGrey = Color(0xFFF0F0F0); // fondos claros de cards/inputs
+  static const border = Color(0xFFE0E0E0); // bordes de inputs/cards
 }

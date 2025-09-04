@@ -2,12 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorconnect/core/themes/app_constants.dart';
+import 'package:tutorconnect/core/themes/app_text_styles.dart';
+import 'package:tutorconnect/core/themes/app_colors.dart';
 import 'package:tutorconnect/features/solicitud_estudiante/data/models/solicitud_tutoria_model.dart';
 import 'package:tutorconnect/features/solicitud_estudiante/presentation/widgets/solicitud_tutoria_card.dart';
 import 'package:tutorconnect/features/materias/helpers/materia_helper.dart';
 import 'package:tutorconnect/features/tutorias/helper/tutoria_helper.dart';
 import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
-import 'solicitud_tutoria_filtro_fecha_ui_widget.dart'; // <-- nuevo widget de filtro
+import 'solicitud_tutoria_filtro_fecha_ui_widget.dart'; // <-- filtro de fechas
 
 class SolicitudTutoriaListWidget extends ConsumerStatefulWidget {
   final List<SolicitudTutoriaModel> solicitudes;
@@ -22,18 +24,23 @@ class SolicitudTutoriaListWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SolicitudTutoriaListWidget> createState() => _SolicitudTutoriaListWidgetState();
+  ConsumerState<SolicitudTutoriaListWidget> createState() =>
+      _SolicitudTutoriaListWidgetState();
 }
 
-class _SolicitudTutoriaListWidgetState extends ConsumerState<SolicitudTutoriaListWidget> {
+class _SolicitudTutoriaListWidgetState
+    extends ConsumerState<SolicitudTutoriaListWidget> {
   DateTimeRange? _rangoSeleccionado;
 
   @override
   Widget build(BuildContext context) {
     // 🔹 Filtrar solo solicitudes relacionadas con el usuario
     final solicitudesFiltradas = widget.solicitudes
-        .where((s) =>
-            s.estudianteId == widget.currentUserId || widget.currentUserRol == UsuarioRol.docente)
+        .where(
+          (s) =>
+              s.estudianteId == widget.currentUserId ||
+              widget.currentUserRol == UsuarioRol.docente,
+        )
         .toList();
 
     // 🔹 Aplicar filtro de fechas
@@ -43,7 +50,7 @@ class _SolicitudTutoriaListWidgetState extends ConsumerState<SolicitudTutoriaLis
             final fecha = s.fechaEnvio?.toDate();
             if (fecha == null) return false;
             return !fecha.isBefore(_rangoSeleccionado!.start) &&
-                   !fecha.isAfter(_rangoSeleccionado!.end);
+                !fecha.isAfter(_rangoSeleccionado!.end);
           }).toList();
 
     // 🔹 Agrupar por materia
@@ -57,7 +64,7 @@ class _SolicitudTutoriaListWidgetState extends ConsumerState<SolicitudTutoriaLis
       children: [
         // 🔹 Filtro de fechas siempre visible
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppPaddingConstants.global),
           child: SolicitudTutoriaFiltroFechaUiWidget(
             rangoSeleccionado: _rangoSeleccionado,
             onChanged: (nuevoRango) {
@@ -71,7 +78,15 @@ class _SolicitudTutoriaListWidgetState extends ConsumerState<SolicitudTutoriaLis
         // 🔹 Lista de solicitudes o mensaje si no hay
         Expanded(
           child: solicitudesPorMateria.isEmpty
-              ? const Center(child: Text('No hay solicitudes de tutoría en el rango seleccionado'))
+              ? Center(
+                  child: Text(
+                    'No hay solicitudes de tutoría en el rango seleccionado',
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.darkGrey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
               : ListView(
                   padding: const EdgeInsets.all(AppPaddingConstants.global),
                   children: solicitudesPorMateria.entries.map((entry) {
@@ -81,15 +96,22 @@ class _SolicitudTutoriaListWidgetState extends ConsumerState<SolicitudTutoriaLis
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // 🔹 Nombre de la materia
                         Text(
                           materia.nombre,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                          style: AppTextStyles.heading2.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
                         ),
                         const SizedBox(height: AppPaddingConstants.global),
+
+                        // 🔹 Lista de solicitudes de esa materia
                         ...solicitudesMateria.map((solicitud) {
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: AppPaddingConstants.global),
+                            padding: const EdgeInsets.only(
+                              bottom: AppPaddingConstants.global,
+                            ),
                             child: SolicitudTutoriaCard(
                               solicitud: solicitud,
                               currentUserId: widget.currentUserId ?? '',
@@ -97,6 +119,7 @@ class _SolicitudTutoriaListWidgetState extends ConsumerState<SolicitudTutoriaLis
                             ),
                           );
                         }),
+
                         const SizedBox(height: AppPaddingConstants.global * 2),
                       ],
                     );

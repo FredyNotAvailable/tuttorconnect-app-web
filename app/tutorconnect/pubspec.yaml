@@ -32,6 +32,7 @@ dependencies:
 
   # Splash screen
   flutter_native_splash: ^2.4.6
+  timeago: ^3.7.1
 
 dev_dependencies:
   flutter_test:

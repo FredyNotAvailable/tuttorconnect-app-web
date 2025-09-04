@@ -45,16 +45,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 SizedBox(
                   height: screenHeight * 0.5,
                   width: double.infinity,
-                  child: Image.asset(
-                    AppAssets.loginImage,
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.asset(AppAssets.loginImage, fit: BoxFit.cover),
                 ),
                 // Sección inferior: Formulario + botones
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 24,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.background,
                       borderRadius: const BorderRadius.only(
@@ -73,7 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          'Bienvenido!',
+                          'Bienvenido a TutorConnect!',
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.primary,
@@ -85,7 +85,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           emailController: _emailController,
                           passwordController: _passwordController,
                           obscurePassword: _obscurePassword,
-                          toggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
+                          toggleObscure: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                         ),
                         const SizedBox(height: 24),
                         SizedBox(
@@ -108,7 +110,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             child: const Text(
                               'Iniciar sesión',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
@@ -117,7 +122,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           width: double.infinity,
                           child: TextButton(
                             onPressed: () {
-                              resetPassword(context, ref, _emailController.text.trim());
+                              resetPassword(
+                                context,
+                                ref,
+                                _emailController.text.trim(),
+                              );
                             },
                             style: TextButton.styleFrom(
                               foregroundColor: theme.colorScheme.primary,
@@ -135,7 +144,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                         ),
-
                       ],
                     ),
                   ),
@@ -147,5 +155,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
-
 }

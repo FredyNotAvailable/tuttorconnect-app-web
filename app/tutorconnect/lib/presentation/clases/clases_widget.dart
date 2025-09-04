@@ -38,7 +38,9 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
         await ref.read(mallaCurricularProvider.notifier).getAllMallas();
         await ref.read(materiaMallaProvider.notifier).getAllMateriasMalla();
         await ref.read(materiaProvider.notifier).getAllMaterias();
-        await ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias();
+        await ref
+            .read(profesorMateriaProvider.notifier)
+            .getAllProfesoresMaterias();
         setState(() => loading = false);
       } catch (e) {
         setState(() {
@@ -51,27 +53,71 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (loading) return const Center(child: CircularProgressIndicator());
-    if (error != null) return Center(child: Text('Error: $error'));
+    if (loading) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 3));
+    }
+
+    if (error != null) {
+      return Center(
+        child: Card(
+          color: Theme.of(context).colorScheme.errorContainer,
+          elevation: 3,
+          margin: const EdgeInsets.all(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Error: $error',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onErrorContainer,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
 
     List<MateriaModel> materias = [];
 
     if (widget.usuario.rol == UsuarioRol.estudiante) {
       materias = getMateriasByEstudianteId(ref, widget.usuario.id);
     } else if (widget.usuario.rol == UsuarioRol.docente) {
-      final List<ProfesorMateriaModel> relaciones =
-          getMateriasByProfesorId(ref, widget.usuario.id);
-      materias = relaciones.map((r) => getMateriaById(ref, r.materiaId)).toList();
+      final List<ProfesorMateriaModel> relaciones = getMateriasByProfesorId(
+        ref,
+        widget.usuario.id,
+      );
+      materias = relaciones
+          .map((r) => getMateriaById(ref, r.materiaId))
+          .toList();
     } else {
       return const Center(child: Text('Rol no reconocido'));
     }
 
     if (materias.isEmpty) {
       return Center(
-        child: Text(
-          widget.usuario.rol == UsuarioRol.estudiante
-              ? 'No tienes clases asignadas'
-              : 'No dictas materias asignadas',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.usuario.rol == UsuarioRol.estudiante
+                  ? 'No tienes clases asignadas'
+                  : 'No dictas materias asignadas',
+              style: TextStyle(
+                fontSize: 18,
+                color: Theme.of(context).colorScheme.onBackground,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       );
     }
@@ -81,7 +127,10 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
       itemCount: materias.length,
       itemBuilder: (context, index) {
         final materia = materias[index];
-        return ClaseCard(materia: materia);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: ClaseCard(materia: materia),
+        );
       },
     );
   }

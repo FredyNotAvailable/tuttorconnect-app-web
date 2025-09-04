@@ -41,13 +41,17 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
   }
 
   /// Filtra todas las tutorías estudiante por materia
-  List<TutoriaEstudianteModel> _getAllTutoriasEstudiantesByMateria(String materiaId) {
+  List<TutoriaEstudianteModel> _getAllTutoriasEstudiantesByMateria(
+    String materiaId,
+  ) {
     final allTutoriasEstudiantes =
         ref.read(tutoriasEstudiantesProvider).tutoriasEstudiantes ?? [];
     final allTutorias = ref.read(tutoriaProvider).tutorias ?? [];
 
-    final tutoriaIdsMateria =
-        allTutorias.where((t) => t.materiaId == materiaId).map((t) => t.id).toSet();
+    final tutoriaIdsMateria = allTutorias
+        .where((t) => t.materiaId == materiaId)
+        .map((t) => t.id)
+        .toSet();
 
     return allTutoriasEstudiantes
         .where((te) => tutoriaIdsMateria.contains(te.tutoriaId))
@@ -59,7 +63,9 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
       await ref.read(aulaProvider.notifier).getAllAulas();
       await ref.read(horariosClasesProvider.notifier).getAllHorarios();
       await ref.read(materiaProvider.notifier).getAllMaterias();
-      await ref.read(tutoriasEstudiantesProvider.notifier).getAllTutoriasEstudiantes();
+      await ref
+          .read(tutoriasEstudiantesProvider.notifier)
+          .getAllTutoriasEstudiantes();
       await ref.read(usuarioProvider.notifier).getAllUsuarios();
       await ref.read(tutoriaProvider.notifier).getAllTutorias();
 
@@ -67,16 +73,22 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
       final currentUser = authState.user;
 
       final allTutorias = getAllTutoriasByMateriaId(ref, widget.materia.id);
-      final allTutoriasEstudiantes = _getAllTutoriasEstudiantesByMateria(widget.materia.id);
+      final allTutoriasEstudiantes = _getAllTutoriasEstudiantesByMateria(
+        widget.materia.id,
+      );
 
       if (currentUser?.rol == UsuarioRol.docente) {
-        tutoriasFiltradas = allTutorias.where((t) => t.profesorId == currentUser!.id).toList();
+        tutoriasFiltradas = allTutorias
+            .where((t) => t.profesorId == currentUser!.id)
+            .toList();
       } else if (currentUser?.rol == UsuarioRol.estudiante) {
         final tutoriaIds = allTutoriasEstudiantes
             .where((te) => te.estudianteId == currentUser!.id)
             .map((te) => te.tutoriaId)
             .toSet();
-        tutoriasFiltradas = allTutorias.where((t) => tutoriaIds.contains(t.id)).toList();
+        tutoriasFiltradas = allTutorias
+            .where((t) => tutoriaIds.contains(t.id))
+            .toList();
       }
 
       horarios = getHorariosByMateria(ref, widget.materia.id);
@@ -99,20 +111,61 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
     final isDocente = currentUser?.rol == UsuarioRol.docente;
     final isEstudiante = currentUser?.rol == UsuarioRol.estudiante;
 
-    if (loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (error != null) return Scaffold(body: Center(child: Text('Error: $error')));
+    if (loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(strokeWidth: 3)),
+      );
+    }
+
+    if (error != null) {
+      return Scaffold(
+        body: Center(
+          child: Card(
+            color: Theme.of(context).colorScheme.errorContainer,
+            elevation: 3,
+            margin: const EdgeInsets.all(20),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Error: $error',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.materia.nombre)),
-      body: ClaseDetalleInfoWidget(
-        materia: widget.materia,
-        horarios: horarios,
-        tutorias: tutoriasFiltradas,
-        estudiantes: estudiantes,
-        isDocente: isDocente,
-        isEstudiante: isEstudiante,
+      appBar: AppBar(
+        title: Text(
+          widget.materia.nombre,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.surface,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        elevation: 2,
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ClaseDetalleInfoWidget(
+          materia: widget.materia,
+          horarios: horarios,
+          tutorias: tutoriasFiltradas,
+          estudiantes: estudiantes,
+          isDocente: isDocente,
+          isEstudiante: isEstudiante,
+        ),
       ),
     );
   }
 }
-

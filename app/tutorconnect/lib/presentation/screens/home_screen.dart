@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorconnect/core/routes/app_routes.dart';
 import 'package:tutorconnect/core/themes/app_constants.dart';
+import 'package:tutorconnect/core/themes/app_colors.dart';
+import 'package:tutorconnect/core/themes/app_text_styles.dart';
 import 'package:tutorconnect/features/auth/application/providers/auth_provider.dart';
 import 'package:tutorconnect/features/usuarios/data/models/usuario.dart';
 import 'package:tutorconnect/presentation/clases/clases_widget.dart';
@@ -23,21 +25,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Cerrar Sesión'),
-        content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Cerrar Sesión', style: AppTextStyles.heading2),
+        content: const Text(
+          '¿Estás seguro de que quieres cerrar sesión?',
+          style: AppTextStyles.body,
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Cerrar Sesión')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.onPrimary,
+            ),
+            child: const Text("Cerrar Sesión"),
+          ),
         ],
       ),
     );
 
-
     if (confirmed == true) {
-      // ⚡ Cerrar sesión
       await ref.read(authProvider.notifier).logout();
 
-      // ⚡ Navegar a login reemplazando la pantalla actual
       if (mounted) {
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
@@ -45,18 +58,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   List<Widget> _buildScreens(UsuarioModel? user) => [
-        const TutoriasWidget(),
-        if (user?.rol == UsuarioRol.estudiante) const SolicitudesTutoriasWidget(),
-        user != null ? ClasesWidget(usuario: user) : const Center(child: Text("No hay usuario logueado")),
-        user != null ? PerfilUsuarioWidget(usuario: user) : const Center(child: Text("No hay usuario logueado")),
-      ];
+    const TutoriasWidget(),
+    if (user?.rol == UsuarioRol.estudiante) const SolicitudesTutoriasWidget(),
+    user != null
+        ? ClasesWidget(usuario: user)
+        : const Center(child: Text("No hay usuario logueado")),
+    user != null
+        ? PerfilUsuarioWidget(usuario: user)
+        : const Center(child: Text("No hay usuario logueado")),
+  ];
 
   List<BottomNavigationBarItem> _buildNavItems(UsuarioModel? user) => [
-        const BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: "Tutorías"),
-        if (user?.rol == UsuarioRol.estudiante) const BottomNavigationBarItem(icon: Icon(Icons.assignment), label: "Solicitudes"),
-        const BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Clases"),
-        const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
-      ];
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.menu_book),
+      label: "Tutorías",
+    ),
+    if (user?.rol == UsuarioRol.estudiante)
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.assignment),
+        label: "Solicitudes",
+      ),
+    const BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Clases"),
+    const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +90,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final screens = _buildScreens(user);
     final navItems = _buildNavItems(user);
 
-    // Asegurarse de que el índice seleccionado sea válido
     if (_selectedIndex >= screens.length) _selectedIndex = 0;
 
-    // Definir títulos por índice
     final List<String> titles = [
       "Tutorías",
       if (user?.rol == UsuarioRol.estudiante) "Solicitudes",
@@ -81,35 +103,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         title: Text(
           titles[_selectedIndex],
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.surface, // <-- color de la letra
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.heading2.copyWith(color: AppColors.onPrimary),
         ),
-        backgroundColor: Theme.of(context).colorScheme.primary, // <-- fondo primario
+        backgroundColor: AppColors.primary,
         elevation: 0,
+        centerTitle: true,
         actions: [
           IconButton(
+            tooltip: "Cerrar sesión",
             onPressed: () => _logout(context),
-            icon: Icon(
-              Icons.logout,
-              color: Theme.of(context).colorScheme.surface, // <-- ícono en surface
-            ),
+            icon: const Icon(Icons.logout),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppPaddingConstants.global), // padding global para el contenido
-        child: screens[_selectedIndex],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Padding(
+          key: ValueKey(_selectedIndex),
+          padding: const EdgeInsets.all(AppPaddingConstants.global),
+          child: screens[_selectedIndex],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         items: navItems,
         type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.grey,
+        selectedLabelStyle: AppTextStyles.body,
+        unselectedLabelStyle: AppTextStyles.caption,
       ),
     );
-
   }
 }
