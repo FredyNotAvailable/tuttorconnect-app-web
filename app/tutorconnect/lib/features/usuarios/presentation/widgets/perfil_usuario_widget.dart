@@ -51,19 +51,6 @@ class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
     });
   }
 
-  void _mostrarModalRestablecer() {
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: BotonRestablecerContrasena(correo: widget.usuario.correo),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -71,7 +58,7 @@ class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 🔹 Perfil del usuario con estilo moderno
+          // Perfil del usuario
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -80,10 +67,9 @@ class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
             ),
             child: PerfilCard(usuario: widget.usuario),
           ),
-
           const SizedBox(height: 16),
 
-          // 🔹 Información académica (solo estudiantes)
+          // Información académica (solo estudiantes)
           if (widget.usuario.rol == UsuarioRol.estudiante)
             Container(
               padding: const EdgeInsets.all(16),
@@ -108,21 +94,8 @@ class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
 
           const SizedBox(height: 24),
 
-          // 🔹 Botón de restablecer contraseña con modal centrado
-          ElevatedButton(
-            onPressed: _mostrarModalRestablecer,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(172, 189, 2, 95),
-              foregroundColor: AppColors.onPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              textStyle: AppTextStyles.button.copyWith(fontSize: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 4,
-            ),
-            child: const Text("Restablecer Contraseña"),
-          ),
+          // Botón Restablecer Contraseña
+          BotonRestablecerContrasena(correo: widget.usuario.correo),
 
           const SizedBox(height: 24),
         ],
