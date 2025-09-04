@@ -1,0 +1,75 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    // El plugin de Flutter debe ir después de Android y Kotlin
+    id 'dev.flutter.flutter-gradle-plugin'
+
+    // Plugin de Google Services para Firebase
+    id 'com.google.gms.google-services'
+}
+
+// 🔑 Cargar configuración desde key.properties
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+dependencies {
+    // Importar Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:34.2.0')
+
+    // Dependencias de Firebase
+    implementation 'com.google.firebase:firebase-analytics'
+
+    // Agrega aquí otros servicios Firebase que necesites
+    // https://firebase.google.com/docs/android/setup#available-libraries
+}
+
+android {
+    namespace 'com.uide.tutorconnect'
+    compileSdk 35
+    ndkVersion '27.0.12077973'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    defaultConfig {
+        applicationId 'com.uide.tutorconnect'
+        minSdk 23
+        targetSdk 35
+        versionCode flutter.versionCode
+        versionName flutter.versionName
+    }
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
