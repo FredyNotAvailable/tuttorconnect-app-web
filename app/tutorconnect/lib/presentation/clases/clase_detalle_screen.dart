@@ -37,7 +37,10 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(_cargarDatos);
+    // 🔹 Cargar datos después del primer frame para evitar errores
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cargarDatos();
+    });
   }
 
   /// Filtra todas las tutorías estudiante por materia
@@ -59,13 +62,16 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
   }
 
   Future<void> _cargarDatos() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
     try {
       await ref.read(aulaProvider.notifier).getAllAulas();
       await ref.read(horariosClasesProvider.notifier).getAllHorarios();
       await ref.read(materiaProvider.notifier).getAllMaterias();
-      await ref
-          .read(tutoriasEstudiantesProvider.notifier)
-          .getAllTutoriasEstudiantes();
+      await ref.read(tutoriasEstudiantesProvider.notifier).getAllTutoriasEstudiantes();
       await ref.read(usuarioProvider.notifier).getAllUsuarios();
       await ref.read(tutoriaProvider.notifier).getAllTutorias();
 
@@ -73,26 +79,23 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
       final currentUser = authState.user;
 
       final allTutorias = getAllTutoriasByMateriaId(ref, widget.materia.id);
-      final allTutoriasEstudiantes = _getAllTutoriasEstudiantesByMateria(
-        widget.materia.id,
-      );
+      final allTutoriasEstudiantes =
+          _getAllTutoriasEstudiantesByMateria(widget.materia.id);
 
       if (currentUser?.rol == UsuarioRol.docente) {
-        tutoriasFiltradas = allTutorias
-            .where((t) => t.profesorId == currentUser!.id)
-            .toList();
+        tutoriasFiltradas =
+            allTutorias.where((t) => t.profesorId == currentUser!.id).toList();
       } else if (currentUser?.rol == UsuarioRol.estudiante) {
         final tutoriaIds = allTutoriasEstudiantes
             .where((te) => te.estudianteId == currentUser!.id)
             .map((te) => te.tutoriaId)
             .toSet();
-        tutoriasFiltradas = allTutorias
-            .where((t) => tutoriaIds.contains(t.id))
-            .toList();
+        tutoriasFiltradas =
+            allTutorias.where((t) => tutoriaIds.contains(t.id)).toList();
       }
 
       horarios = getHorariosByMateria(ref, widget.materia.id);
-      estudiantes = getAllEstudiantesByMateria(ref, widget.materia.id);
+      estudiantes = getAllEstudiantesByClase(ref, widget.materia.id);
 
       setState(() => loading = false);
     } catch (e) {
@@ -155,15 +158,19 @@ class _ClaseDetailScreenState extends ConsumerState<ClaseDetalleScreen> {
         elevation: 2,
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ClaseDetalleInfoWidget(
-          materia: widget.materia,
-          horarios: horarios,
-          tutorias: tutoriasFiltradas,
-          estudiantes: estudiantes,
-          isDocente: isDocente,
-          isEstudiante: isEstudiante,
+      body: RefreshIndicator(
+        onRefresh: _cargarDatos,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: ClaseDetalleInfoWidget(
+            materia: widget.materia,
+            horarios: horarios,
+            tutorias: tutoriasFiltradas,
+            estudiantes: estudiantes,
+            isDocente: isDocente,
+            isEstudiante: isEstudiante,
+          ),
         ),
       ),
     );

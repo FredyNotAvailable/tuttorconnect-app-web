@@ -18,7 +18,7 @@ TutoriaModel getTutoriaById(WidgetRef ref, String id) {
       fecha: Timestamp.now(),
       horaInicio: '',
       horaFin: '',
-      estado: TutoriaEstado.pendiente,
+      estado: TutoriaEstado.cancelada,
     );
   }
 
@@ -34,7 +34,7 @@ TutoriaModel getTutoriaById(WidgetRef ref, String id) {
       fecha: Timestamp.now(),
       horaInicio: '',
       horaFin: '',
-      estado: TutoriaEstado.pendiente,
+      estado: TutoriaEstado.cancelada,
     ),
   );
 
@@ -56,6 +56,8 @@ List<TutoriaModel> getAllTutoriasByMateriaId(WidgetRef ref, String materiaId) {
 
   return tutorias.where((t) => t.materiaId == materiaId).toList();
 }
+
+
 
 /// Devuelve todas las tutorías de un aula
 List<TutoriaModel> getAllTutoriasByAulaId(WidgetRef ref, String aulaId) {

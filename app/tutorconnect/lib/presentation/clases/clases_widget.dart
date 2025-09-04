@@ -30,25 +30,33 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
   @override
   void initState() {
     super.initState();
-    // 🔹 Cargar todos los datos apenas inicia el widget
-    Future.microtask(() async {
-      try {
-        await ref.read(usuarioProvider.notifier).getAllUsuarios();
-        await ref.read(matriculaProvider.notifier).getAllMatriculas();
-        await ref.read(mallaCurricularProvider.notifier).getAllMallas();
-        await ref.read(materiaMallaProvider.notifier).getAllMateriasMalla();
-        await ref.read(materiaProvider.notifier).getAllMaterias();
-        await ref
-            .read(profesorMateriaProvider.notifier)
-            .getAllProfesoresMaterias();
-        setState(() => loading = false);
-      } catch (e) {
-        setState(() {
-          error = e.toString();
-          loading = false;
-        });
-      }
+    // 🔹 Cargar datos después del primer frame para evitar errores
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
     });
+  }
+
+
+  Future<void> _loadData() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
+    try {
+      await ref.read(usuarioProvider.notifier).getAllUsuarios();
+      await ref.read(matriculaProvider.notifier).getAllMatriculas();
+      await ref.read(mallaCurricularProvider.notifier).getAllMallas();
+      await ref.read(materiaMallaProvider.notifier).getAllMateriasMalla();
+      await ref.read(materiaProvider.notifier).getAllMaterias();
+      await ref.read(profesorMateriaProvider.notifier).getAllProfesoresMaterias();
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+      });
+    } finally {
+      setState(() => loading = false);
+    }
   }
 
   @override
@@ -88,9 +96,7 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
         ref,
         widget.usuario.id,
       );
-      materias = relaciones
-          .map((r) => getMateriaById(ref, r.materiaId))
-          .toList();
+      materias = relaciones.map((r) => getMateriaById(ref, r.materiaId)).toList();
     } else {
       return const Center(child: Text('Rol no reconocido'));
     }
@@ -122,16 +128,20 @@ class _ClasesWidgetState extends ConsumerState<ClasesWidget> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: materias.length,
-      itemBuilder: (context, index) {
-        final materia = materias[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: ClaseCard(materia: materia),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: materias.length,
+        itemBuilder: (context, index) {
+          final materia = materias[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: ClaseCard(materia: materia),
+          );
+        },
+      ),
     );
   }
 }
+

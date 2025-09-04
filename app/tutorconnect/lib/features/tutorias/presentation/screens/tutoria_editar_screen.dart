@@ -300,11 +300,18 @@ class _EditarTutoriaScreenState extends ConsumerState<EditarTutoriaScreen> {
                   return;
                 }
 
+                // Convertir solo año/mes/día a UTC
+                final fechaUtc = DateTime.utc(
+                  _fechaSeleccionada!.year,
+                  _fechaSeleccionada!.month,
+                  _fechaSeleccionada!.day,
+                );
+
                 final tutoriaActualizada = widget.tutoria.copyWith(
                   tema: _tituloController.text,
                   descripcion: _descripcionController.text,
                   aulaId: _aulaSeleccionada!,
-                  fecha: Timestamp.fromDate(_fechaSeleccionada!),
+                  fecha: Timestamp.fromDate(fechaUtc), // <-- aquí
                   horaInicio: _horaInicioController.text,
                   horaFin: _horaFinController.text,
                   estado: TutoriaEstado.values.firstWhere((e) => e.name == _estadoSeleccionado),

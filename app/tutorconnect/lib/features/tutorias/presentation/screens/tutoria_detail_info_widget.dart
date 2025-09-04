@@ -39,19 +39,6 @@ class TutoriaDetailInfoWidget extends ConsumerWidget {
     return '$formattedDate | $horaInicio - $horaFin';
   }
 
-  Color _estadoColor(String estado) {
-    switch (estado.toLowerCase()) {
-      case 'pendiente':
-        return Colors.orange;
-      case 'aceptado':
-        return Colors.green;
-      case 'rechazado':
-        return Colors.red;
-      default:
-        return AppColors.darkGrey;
-    }
-  }
-
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -75,6 +62,32 @@ class TutoriaDetailInfoWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Hora actual en UTC-5
+    final ahoraUTC5 = DateTime.now().toUtc().subtract(const Duration(hours: 5));
+
+    // Hora de inicio y fin combinadas con la fecha de la tutoría
+    final fecha = tutoria.fecha.toDate();
+    final inicioParts = tutoria.horaInicio.split(':');
+    final finParts = tutoria.horaFin.split(':');
+
+    final fechaInicio = DateTime(
+      fecha.year,
+      fecha.month,
+      fecha.day,
+      int.parse(inicioParts[0]),
+      int.parse(inicioParts[1]),
+    );
+    final fechaFin = DateTime(
+      fecha.year,
+      fecha.month,
+      fecha.day,
+      int.parse(finParts[0]),
+      int.parse(finParts[1]),
+    );
+
+    // Determinar si estamos dentro del horario de la tutoría
+    final dentroDelHorario = ahoraUTC5.isAfter(fechaInicio) && ahoraUTC5.isBefore(fechaFin);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -94,7 +107,11 @@ class TutoriaDetailInfoWidget extends ConsumerWidget {
             'Fecha y Hora',
             _formatDateTime(tutoria.fecha, tutoria.horaInicio, tutoria.horaFin),
           ),
-          _buildInfoRow('Estado', tutoria.estado.name.toUpperCase()),
+          _buildInfoRow(
+            'Estado',
+            '${tutoria.estado.name[0].toUpperCase()}${tutoria.estado.name.substring(1).toLowerCase()}',
+          ),
+
           const SizedBox(height: 16),
 
           Text('Estudiantes inscritos:', style: AppTextStyles.heading2),
@@ -114,11 +131,44 @@ class TutoriaDetailInfoWidget extends ConsumerWidget {
                       id: '',
                       estudianteId: estudiante.id,
                       tutoriaId: tutoria.id,
-                      estado: AsistenciaEstado.ausente,
+                      estado: AsistenciaEstado.sinRegistro,
                       fecha: Timestamp.now(),
                     );
 
-                final asistenciaExiste = asistencias.containsKey(estudiante.id);
+                // Texto del botón según estado
+                String botonTexto;
+                switch (asistencia.estado) {
+                  case AsistenciaEstado.presente:
+                    botonTexto = 'Presente';
+                    break;
+                  case AsistenciaEstado.ausente:
+                    botonTexto = 'Ausente';
+                    break;
+                  case AsistenciaEstado.sinRegistro:
+                    botonTexto = 'Marcar';
+                }
+
+                // Color del botón según estado
+                Color botonColor;
+                switch (asistencia.estado) {
+                  case AsistenciaEstado.presente:
+                    botonColor = Colors.green;
+                    break;
+                  case AsistenciaEstado.ausente:
+                    botonColor = Colors.red;
+                    break;
+                  case AsistenciaEstado.sinRegistro:
+                    botonColor = AppColors.primary;
+                }
+
+                // Botón activo solo si:
+                // 1️⃣ Docente
+                // 2️⃣ Tutoría confirmada
+                // 3️⃣ Dentro del horario de inicio y fin
+                // 4️⃣ Tutoría no terminada
+                final botonActivo = isDocente &&
+                    tutoria.estado == TutoriaEstado.confirmada &&
+                    dentroDelHorario;
 
                 return Container(
                   width: double.infinity,
@@ -150,20 +200,16 @@ class TutoriaDetailInfoWidget extends ConsumerWidget {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: (isDocente && !tutoriaTerminada)
+                        onPressed: botonActivo
                             ? () => TutoriaActions.mostrarModalAsistencia(
-                                context,
-                                ref,
-                                estudiante.id,
-                                asistencia,
-                              )
+                                  context,
+                                  ref,
+                                  estudiante.id,
+                                  asistencia,
+                                )
                             : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: asistenciaExiste
-                              ? (asistencia.estado == AsistenciaEstado.presente
-                                    ? Colors.green
-                                    : Colors.red)
-                              : AppColors.primary,
+                          backgroundColor: botonActivo ? botonColor : Colors.grey,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 6,
@@ -171,11 +217,7 @@ class TutoriaDetailInfoWidget extends ConsumerWidget {
                           minimumSize: const Size(70, 30),
                         ),
                         child: Text(
-                          asistenciaExiste
-                              ? (asistencia.estado == AsistenciaEstado.presente
-                                    ? 'Presente'
-                                    : 'Ausente')
-                              : 'Marcar',
+                          botonTexto,
                           style: const TextStyle(fontSize: 12),
                         ),
                       ),

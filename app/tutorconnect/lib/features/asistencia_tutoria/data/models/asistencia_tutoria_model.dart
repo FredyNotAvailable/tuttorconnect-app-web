@@ -18,17 +18,29 @@ class AsistenciaTutoriaModel {
   });
 
   /// Convierte de JSON (o Map) a modelo
-  factory AsistenciaTutoriaModel.fromJson(Map<String, dynamic> json, String id) {
-    return AsistenciaTutoriaModel(
-      id: id,
-      tutoriaId: json['tutoriaId'] ?? '',
-      estudianteId: json['estudianteId'] ?? '',
-      fecha: json['fecha'] ?? Timestamp.now(),
-      estado: (json['estado'] ?? 'ausente') == 'presente' 
-          ? AsistenciaEstado.presente 
-          : AsistenciaEstado.ausente,
-    );
+factory AsistenciaTutoriaModel.fromJson(Map<String, dynamic> json, String id) {
+  AsistenciaEstado parseEstado(String estado) {
+    switch (estado) {
+      case 'presente':
+        return AsistenciaEstado.presente;
+      case 'ausente':
+        return AsistenciaEstado.ausente;
+      case 'sinRegistro':
+        return AsistenciaEstado.sinRegistro;
+      default:
+        return AsistenciaEstado.sinRegistro;
+    }
   }
+
+  return AsistenciaTutoriaModel(
+    id: id,
+    tutoriaId: json['tutoriaId'] ?? '',
+    estudianteId: json['estudianteId'] ?? '',
+    fecha: json['fecha'] ?? Timestamp.now(),
+    estado: parseEstado(json['estado'] ?? 'sinRegistro'),
+  );
+}
+
 
   /// Convierte de modelo a JSON
   Map<String, dynamic> toJson() {

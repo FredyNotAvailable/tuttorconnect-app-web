@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutorconnect/features/asistencia_tutoria/application/providers/asistencia_tutoria_provider.dart';
+import 'package:tutorconnect/features/asistencia_tutoria/data/models/asistencia_tutoria_model.dart';
 import 'package:tutorconnect/features/solicitud_estudiante/data/models/solicitud_tutoria_model.dart';
 import 'package:tutorconnect/features/solicitud_estudiante/helpers/solicitud_tutoria_helper.dart';
 import 'package:tutorconnect/features/tutoria_estudiante/data/datasources/tutorias_estudiantes_datasource.dart';
@@ -66,16 +68,17 @@ class SolicitudTutoriaActions {
     if (result == true) onConfirm();
   }
 
-  /// 🔹 Acepta una solicitud de tutoría y crea la relación en Firestore
+  /// Acepta una solicitud de tutoría y asigna al estudiante
   static Future<void> aceptarSolicitud({
     required WidgetRef ref,
     required SolicitudTutoriaModel solicitud,
   }) async {
     final updated = solicitud.copyWith(
-      estado: EstadoSolicitud.aceptado, // 🔹 corregido
+      estado: EstadoSolicitud.aceptado,
       fechaRespuesta: Timestamp.now(),
     );
 
+    // Crear relación directamente en Firestore
     final firestore = FirebaseFirestore.instance;
     final datasource = TutoriasEstudiantesDatasource(firestore);
     final repository = TutoriasEstudiantesRepositoryImpl(datasource);
@@ -86,17 +89,35 @@ class SolicitudTutoriaActions {
       estudianteId: solicitud.estudianteId,
     );
 
+    // 1️⃣ actualizar solicitud a aceptada
     await updateSolicitudHelper(ref, updated);
+
+    // 2️⃣ crear relación tutoría-estudiante
     await repository.createTutoriaEstudiante(nuevaRelacion);
+
+
+    // 3️⃣ crear asistencia en estado "sinRegistro"
+    final asistenciaProvider = ref.read(asistenciaTutoriaProvider.notifier);
+
+    final nuevaAsistencia = AsistenciaTutoriaModel(
+      id: '', // 🔹 se generará en Firestore
+      tutoriaId: solicitud.tutoriaId,
+      estudianteId: solicitud.estudianteId,
+      fecha: Timestamp.now(), // puedes usar la fecha de la tutoría también
+      estado: AsistenciaEstado.sinRegistro,
+    );
+
+    await asistenciaProvider.createAsistencia(nuevaAsistencia);
   }
 
-  /// 🔹 Rechaza una solicitud de tutoría
+
+  /// Rechaza una solicitud de tutoría
   static Future<void> rechazarSolicitud({
     required WidgetRef ref,
     required SolicitudTutoriaModel solicitud,
   }) async {
     final updated = solicitud.copyWith(
-      estado: EstadoSolicitud.rechazado, // 🔹 corregido
+      estado: EstadoSolicitud.rechazado,
       fechaRespuesta: Timestamp.now(),
     );
     await updateSolicitudHelper(ref, updated);

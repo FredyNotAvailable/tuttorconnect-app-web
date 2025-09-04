@@ -49,60 +49,69 @@ class _SolicitudesTutoriasWidgetState extends ConsumerState<SolicitudesTutoriasW
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (loading) return const Center(child: CircularProgressIndicator());
-    if (error != null) return Center(child: Text('Error: $error'));
+Widget build(BuildContext context) {
+  if (loading) return const Center(child: CircularProgressIndicator());
+  if (error != null) return Center(child: Text('Error: $error'));
 
-    final state = ref.watch(solicitudesTutoriasProvider);
-    final authState = ref.watch(authProvider);
-    final currentUser = authState.user;
+  final state = ref.watch(solicitudesTutoriasProvider);
+  final authState = ref.watch(authProvider);
+  final currentUser = authState.user;
 
-    // Filtrar solicitudes según permisos
-    final solicitudes = (state.solicitudes ?? []).where((solicitud) {
-      return currentUser?.id == solicitud.estudianteId;
-    }).toList();
+  // Filtrar solicitudes según permisos
+  final solicitudes = (state.solicitudes ?? []).where((solicitud) {
+    return currentUser?.id == solicitud.estudianteId;
+  }).toList();
 
-    // Filtrar por rango de fechas
-    final solicitudesFiltradas = filtroFecha != null
-        ? solicitudes.where((s) {
-            final tutoria = getTutoriaById(ref, s.tutoriaId);
-            final fechaTutoria = tutoria.fecha.toDate();
-            final fechaSolo = DateTime(fechaTutoria.year, fechaTutoria.month, fechaTutoria.day);
-            final start = DateTime(filtroFecha!.start.year, filtroFecha!.start.month, filtroFecha!.start.day);
-            final end = DateTime(filtroFecha!.end.year, filtroFecha!.end.month, filtroFecha!.end.day);
-            return !fechaSolo.isBefore(start) && !fechaSolo.isAfter(end);
-          }).toList()
-        : solicitudes;
+  // Filtrar por rango de fechas
+  final solicitudesFiltradas = filtroFecha != null
+      ? solicitudes.where((s) {
+          final tutoria = getTutoriaById(ref, s.tutoriaId);
+          final fechaTutoria = tutoria.fecha.toDate();
+          final fechaSolo = DateTime(fechaTutoria.year, fechaTutoria.month, fechaTutoria.day);
+          final start = DateTime(filtroFecha!.start.year, filtroFecha!.start.month, filtroFecha!.start.day);
+          final end = DateTime(filtroFecha!.end.year, filtroFecha!.end.month, filtroFecha!.end.day);
+          return !fechaSolo.isBefore(start) && !fechaSolo.isAfter(end);
+        }).toList()
+      : solicitudes;
 
-    // Agrupar por materia
-    final Map<String, List<SolicitudTutoriaModel>> solicitudesPorMateria = {};
-    for (var s in solicitudesFiltradas) {
-      final tutoria = getTutoriaById(ref, s.tutoriaId);
-      solicitudesPorMateria.putIfAbsent(tutoria.materiaId, () => []).add(s);
-    }
+  return Column(
+    children: [
+      if (filtroFecha != null)
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: () => setState(() => filtroFecha = null),
+              child: const Icon(Icons.clear),
+            ),
+          ],
+        ),
 
-    return Column(
-      children: [
-        // Botón para limpiar filtro de fechas (si aplica)
-        if (filtroFecha != null)
-          Row(
-            children: [
-              ElevatedButton(
-                onPressed: () => setState(() => filtroFecha = null),
-                child: const Icon(Icons.clear),
-              ),
-            ],
-          ),
-
-        // Lista de solicitudes (sin padding interno)
-        Expanded(
+      // Expanded con RefreshIndicator para refrescar al arrastrar
+      Expanded(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            setState(() => loading = true);
+            try {
+              await ref.read(solicitudesTutoriasProvider.notifier).getAllSolicitudes();
+              await ref.read(usuarioProvider.notifier).getAllUsuarios();
+              await ref.read(tutoriaProvider.notifier).getAllTutorias();
+            } catch (e) {
+              setState(() {
+                error = e.toString();
+              });
+            } finally {
+              setState(() => loading = false);
+            }
+          },
           child: SolicitudTutoriaListWidget(
             solicitudes: solicitudesFiltradas,
             currentUserId: currentUser?.id,
             currentUserRol: currentUser?.rol,
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 }

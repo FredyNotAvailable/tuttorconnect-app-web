@@ -62,25 +62,26 @@ class _SolicitudTutoriaListWidgetState
 
     return Column(
       children: [
-        // 🔹 Filtro de fechas siempre visible
-        Padding(
-          padding: const EdgeInsets.all(AppPaddingConstants.global),
-          child: SolicitudTutoriaFiltroFechaUiWidget(
-            rangoSeleccionado: _rangoSeleccionado,
-            onChanged: (nuevoRango) {
-              setState(() {
-                _rangoSeleccionado = nuevoRango;
-              });
-            },
+        // 🔹 Filtro de fechas solo si hay solicitudes filtradas
+        if (solicitudesFiltradas.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.all(AppPaddingConstants.global),
+            child: SolicitudTutoriaFiltroFechaUiWidget(
+              rangoSeleccionado: _rangoSeleccionado,
+              onChanged: (nuevoRango) {
+                setState(() {
+                  _rangoSeleccionado = nuevoRango;
+                });
+              },
+            ),
           ),
-        ),
 
         // 🔹 Lista de solicitudes o mensaje si no hay
         Expanded(
           child: solicitudesPorMateria.isEmpty
               ? Center(
                   child: Text(
-                    'No hay solicitudes de tutoría en el rango seleccionado',
+                    'No hay solicitudes de tutorais disponibles',
                     style: AppTextStyles.body.copyWith(
                       color: AppColors.darkGrey,
                     ),
@@ -128,5 +129,6 @@ class _SolicitudTutoriaListWidgetState
         ),
       ],
     );
+
   }
 }

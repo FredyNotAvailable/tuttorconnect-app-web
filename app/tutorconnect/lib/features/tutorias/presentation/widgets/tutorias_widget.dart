@@ -46,44 +46,61 @@ class _TutoriasWidgetState extends ConsumerState<TutoriasWidget>
   }
 
   @override
-  Widget build(BuildContext context) {
-    super.build(context);
+Widget build(BuildContext context) {
+  super.build(context);
 
-    final tutoriaState = ref.watch(tutoriaProvider);
-    final materiaState = ref.watch(materiaProvider);
-    final usuarioState = ref.watch(usuarioProvider);
-    final tutoriaEstudianteState = ref.watch(tutoriasEstudiantesProvider);
-    final authState = ref.watch(authProvider);
-    final currentUser = authState.user;
+  final tutoriaState = ref.watch(tutoriaProvider);
+  final materiaState = ref.watch(materiaProvider);
+  final usuarioState = ref.watch(usuarioProvider);
+  final tutoriaEstudianteState = ref.watch(tutoriasEstudiantesProvider);
+  final authState = ref.watch(authProvider);
+  final currentUser = authState.user;
 
-    if (currentUser == null) {
-      return const Center(child: Text("No hay usuario logueado"));
-    }
+  if (currentUser == null) {
+    return const Center(child: Text("No hay usuario logueado"));
+  }
 
-    final allTutorias = tutoriaState.tutorias ?? [];
+  final allTutorias = tutoriaState.tutorias ?? [];
 
-    // 🔹 Filtrado según rol
-    List<TutoriaModel> tutoriasFiltradas = [];
-    if (currentUser.rol == UsuarioRol.docente) {
-      tutoriasFiltradas =
-          allTutorias.where((t) => t.profesorId == currentUser.id).toList();
-    } else if (currentUser.rol == UsuarioRol.estudiante) {
-      final tutoriasEstudiantes = tutoriaEstudianteState.tutoriasEstudiantes ?? [];
-      final idsInscrito = tutoriasEstudiantes
-          .where((te) => te.estudianteId == currentUser.id)
-          .map((te) => te.tutoriaId)
-          .toSet();
-      tutoriasFiltradas =
-          allTutorias.where((t) => idsInscrito.contains(t.id)).toList();
-    }
+  // 🔹 Filtrado según rol
+  List<TutoriaModel> tutoriasFiltradas = [];
+  if (currentUser.rol == UsuarioRol.docente) {
+    tutoriasFiltradas =
+        allTutorias.where((t) => t.profesorId == currentUser.id).toList();
+  } else if (currentUser.rol == UsuarioRol.estudiante) {
+    final tutoriasEstudiantes = tutoriaEstudianteState.tutoriasEstudiantes ?? [];
+    final idsInscrito = tutoriasEstudiantes
+        .where((te) => te.estudianteId == currentUser.id)
+        .map((te) => te.tutoriaId)
+        .toSet();
+    tutoriasFiltradas =
+        allTutorias.where((t) => idsInscrito.contains(t.id)).toList();
+  }
 
-    final tutoriasPorMateria = agruparTutoriasPorMateria<TutoriaModel, String>(
-      items: tutoriasFiltradas,
-      agruparPor: (t) => t.materiaId,
-    );
+  final tutoriasPorMateria = agruparTutoriasPorMateria<TutoriaModel, String>(
+    items: tutoriasFiltradas,
+    agruparPor: (t) => t.materiaId,
+  );
 
-    return Scaffold(
-      body: TutoriasStatus(
+  return Scaffold(
+    body: RefreshIndicator(
+      onRefresh: () async {
+        // Recargar todos los datos necesarios
+        try {
+          await ref.read(tutoriaProvider.notifier).getAllTutorias();
+          await ref.read(materiaProvider.notifier).getAllMaterias();
+          await ref.read(usuarioProvider.notifier).getAllUsuarios();
+          if (currentUser.rol == UsuarioRol.estudiante) {
+            await ref.read(tutoriasEstudiantesProvider.notifier).getAllTutoriasEstudiantes();
+          }
+        } catch (e) {
+          // Opcional: mostrar un SnackBar o manejar el error
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al refrescar: $e')),
+          );
+        }
+      },
+      child: TutoriasStatus(
         loading: tutoriaState.loading ||
             materiaState.loading ||
             usuarioState.loading ||
@@ -104,13 +121,15 @@ class _TutoriasWidgetState extends ConsumerState<TutoriasWidget>
                     TutoriaActions.abrirDetalleTutoria(context, ref, tutoria),
               ),
       ),
-      floatingActionButton: currentUser.rol == UsuarioRol.docente
-          ? FloatingActionButton(
-              onPressed: () => TutoriaActions.crearNuevaTutoria(context),
-              tooltip: 'Crear nueva tutoría',
-              child: const Icon(Icons.add),
-            )
-          : null,
-    );
-  }
+    ),
+    floatingActionButton: currentUser.rol == UsuarioRol.docente
+        ? FloatingActionButton(
+            onPressed: () => TutoriaActions.crearNuevaTutoria(context),
+            tooltip: 'Crear nueva tutoría',
+            child: const Icon(Icons.add),
+          )
+        : null,
+  );
+}
+
 }

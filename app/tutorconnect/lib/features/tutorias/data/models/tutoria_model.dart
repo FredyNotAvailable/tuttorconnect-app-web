@@ -1,49 +1,37 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum TutoriaEstado {
-  pendiente,
   confirmada,
   cancelada,
   finalizada,
-  desconocido,
 }
 
 // ✅ Función helper para mostrar el estado como String
 String estadoToString(TutoriaEstado estado) {
   switch (estado) {
-    case TutoriaEstado.pendiente:
-      return 'Pendiente';
     case TutoriaEstado.confirmada:
       return 'Confirmada';
     case TutoriaEstado.cancelada:
       return 'Cancelada';
     case TutoriaEstado.finalizada:
       return 'Finalizada';
-    case TutoriaEstado.desconocido:
-      return 'Desconocido';
   }
 }
 
 extension TutoriaEstadoExtension on TutoriaEstado {
   String get name {
     switch (this) {
-      case TutoriaEstado.pendiente:
-        return 'pendiente';
       case TutoriaEstado.confirmada:
         return 'confirmada';
       case TutoriaEstado.cancelada:
         return 'cancelada';
       case TutoriaEstado.finalizada:
         return 'finalizada';
-      case TutoriaEstado.desconocido:
-        return 'desconocido';
     }
   }
 
   static TutoriaEstado fromString(String estado) {
     switch (estado.toLowerCase()) {
-      case 'pendiente':
-        return TutoriaEstado.pendiente;
       case 'confirmada':
         return TutoriaEstado.confirmada;
       case 'cancelada':
@@ -51,9 +39,8 @@ extension TutoriaEstadoExtension on TutoriaEstado {
       case 'finalizada':
         return TutoriaEstado.finalizada;
       case 'desconocido':
-        return TutoriaEstado.desconocido;
       default:
-        return TutoriaEstado.desconocido; // valor por defecto
+        throw ArgumentError('Estado no válido: $estado');
     }
   }
 }
@@ -84,6 +71,7 @@ class TutoriaModel {
   });
 
   factory TutoriaModel.fromJson(Map<String, dynamic> json, String id) {
+    final estadoStr = json['estado'] as String? ?? 'confirmada'; // 🔹 valor por defecto válido
     return TutoriaModel(
       id: id,
       profesorId: json['profesorId'] ?? '',
@@ -92,11 +80,12 @@ class TutoriaModel {
       fecha: json['fecha'] is Timestamp ? json['fecha'] as Timestamp : Timestamp.now(),
       horaInicio: json['horaInicio'] ?? '',
       horaFin: json['horaFin'] ?? '',
-      estado: TutoriaEstadoExtension.fromString(json['estado'] ?? 'pendiente'),
+      estado: TutoriaEstadoExtension.fromString(estadoStr),
       tema: json['tema'] ?? '',
       descripcion: json['descripcion'] ?? '',
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {

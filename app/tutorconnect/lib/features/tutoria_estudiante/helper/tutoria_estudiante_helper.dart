@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tutorconnect/features/materias_malla/application/providers/materia_malla_provider.dart';
+import 'package:tutorconnect/features/matriculas/application/providers/matricula_provider.dart';
 import 'package:tutorconnect/features/tutoria_estudiante/application/providers/tutorias_estudiantes_provider.dart';
 import 'package:tutorconnect/features/tutoria_estudiante/data/models/tutoria_estudiante_model.dart';
 import 'package:tutorconnect/features/tutorias/helper/tutoria_helper.dart';
@@ -45,6 +47,28 @@ List<UsuarioModel> getAllEstudiantesByMateria(WidgetRef ref, String materiaId) {
 
   return estudiantesSet.toList();
 }
+
+
+List<UsuarioModel> getAllEstudiantesByClase(WidgetRef ref, String materiaId) {
+  final matriculas = ref.read(matriculaProvider).matriculas ?? [];
+  final materiasMalla = ref.read(materiaMallaProvider).materiasMalla ?? [];
+  final estudiantesSet = <UsuarioModel>{};
+
+  // Filtrar las materias_malla que contienen esta materia
+  final mallaIdsConMateria = materiasMalla
+      .where((mm) => mm.materiaId == materiaId)
+      .map((mm) => mm.mallaId)
+      .toSet();
+
+  // Obtener estudiantes cuyas matriculas correspondan a esas mallas
+  for (var matricula in matriculas.where((m) => mallaIdsConMateria.contains(m.mallaId))) {
+    final usuario = getUsuarioById(ref, matricula.estudianteId);
+    estudiantesSet.add(usuario);
+  }
+
+  return estudiantesSet.toList();
+}
+
 
 /// Asigna un estudiante a una tutoría
 Future<void> asignarEstudianteATutoria(WidgetRef ref, String tutoriaId, String estudianteId) async {
