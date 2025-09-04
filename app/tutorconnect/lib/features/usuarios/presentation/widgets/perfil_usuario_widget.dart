@@ -51,6 +51,19 @@ class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
     });
   }
 
+  void _mostrarModalRestablecer() {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: BotonRestablecerContrasena(correo: widget.usuario.correo),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -95,15 +108,9 @@ class _PerfilUsuarioWidgetState extends ConsumerState<PerfilUsuarioWidget> {
 
           const SizedBox(height: 24),
 
-          // 🔹 Botón de restablecer contraseña con estilo consistente
+          // 🔹 Botón de restablecer contraseña con modal centrado
           ElevatedButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    BotonRestablecerContrasena(correo: widget.usuario.correo),
-              ),
-            ),
+            onPressed: _mostrarModalRestablecer,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(172, 189, 2, 95),
               foregroundColor: AppColors.onPrimary,
